@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime
+from sqlalchemy import Column, Integer, String, Boolean, DateTime ,Enum
 from sqlalchemy.sql import func
+from app.models.enums import UserRole
 
 from app.database.database import Base
 
@@ -39,7 +40,7 @@ class User(Base):
     role = Column(
         String(20),
         nullable=False,
-        default="customer"
+        default=UserRole.CUSTOMER.value
     )
 
     is_active = Column(
