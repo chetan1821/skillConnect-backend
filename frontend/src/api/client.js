@@ -5,7 +5,9 @@ import {
   INITIAL_DASHBOARD_STATS
 } from '../data/mockData';
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const BASE_URL = (
+  import.meta.env.VITE_API_URL || 'http://localhost:8000'
+).replace(/\/+$/, '');
 
 class ApiClient {
   constructor() {
@@ -125,72 +127,54 @@ class ApiClient {
 
   // Auth APIs
   async login(email, password) {
-    if (!this.useMock) {
-      try {
-        const data = await this.request('/auth/login', {
-          method: 'POST',
-          body: JSON.stringify({ email, password })
-        });
-        this.setToken(data.access_token);
-        const me = await this.getMe();
-        return { token: data.access_token, user: me };
-      } catch (err) {
-        console.warn("Backend login failed or unavailable:", err.message);
-        if (err.message.includes("Invalid") || err.message.includes("inactive")) {
-          throw err;
-        }
-      }
+    if (this.useMock) {
+      throw new Error(
+        'Mock mode is enabled. Disable it to use the live backend.'
+      );
     }
 
-    // Mock Fallback Login
-    const user = this.mockUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
-    if (!user) {
-      throw new Error("Invalid email or password");
+    try {
+      const data = await this.request('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password })
+      });
+
+      if (!data.access_token) {
+        throw new Error('Login response did not contain an access token.');
+      }
+
+      this.setToken(data.access_token);
+
+      const me = await this.getMe();
+
+      return {
+        token: data.access_token,
+        user: me
+      };
+    } catch (err) {
+      this.setToken(null);
+      localStorage.removeItem('skillconnect_user');
+      console.error('[Login Error]', err);
+      throw err;
     }
-    if (!user.is_active) {
-      throw new Error("User account is inactive");
-    }
-    const token = `mock-jwt-token-${user.id}-${Date.now()}`;
-    this.setToken(token);
-    return { token, user };
   }
 
   async register(userData) {
-    if (!this.useMock) {
-      try {
-        const created = await this.request('/auth/register', {
-          method: 'POST',
-          body: JSON.stringify(userData)
-        });
-        return created;
-      } catch (err) {
-        console.warn("Backend register failed or unavailable:", err.message);
-        if (err.message.includes("already registered")) {
-          throw err;
-        }
-      }
+    if (this.useMock) {
+      throw new Error(
+        'Mock mode is enabled. Disable it to use the live backend.'
+      );
     }
 
-    // Mock Fallback Register
-    const existing = this.mockUsers.find(u => u.email.toLowerCase() === userData.email.toLowerCase());
-    if (existing) {
-      throw new Error("Email already registered");
+    try {
+      return await this.request('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify(userData)
+      });
+    } catch (err) {
+      console.error('[Registration Error]', err);
+      throw err;
     }
-
-    const newUser = {
-      id: Date.now(),
-      full_name: userData.full_name,
-      email: userData.email,
-      phone_number: userData.phone_number,
-      role: "Customer",
-      is_active: true,
-      created_at: new Date().toISOString()
-    };
-    this.mockUsers.unshift(newUser);
-    this.mockStats.total_users += 1;
-    this.mockStats.total_customers += 1;
-    this.mockStats.active_users += 1;
-    return newUser;
   }
 
   async getMe() {
