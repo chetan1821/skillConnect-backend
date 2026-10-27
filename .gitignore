@@ -31,3 +31,9 @@ Thumbs.db
 alembic/versions/__pycache__/
 
 /passwordstore.txt
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
