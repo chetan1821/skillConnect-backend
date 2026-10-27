@@ -1,7 +1,7 @@
-from pydantic import BaseModel, ConfigDict, Field,EmailStr
+from pydantic import BaseModel, ConfigDict, Field, EmailStr
 
 
-class ProviderCreate(BaseModel):
+class ProviderRegister(BaseModel):
     full_name: str = Field(min_length=2, max_length=100)
     email: EmailStr
     phone_number: str = Field(min_length=10, max_length=15)
@@ -10,6 +10,8 @@ class ProviderCreate(BaseModel):
     business_name: str = Field(min_length=2, max_length=150)
     description: str | None = None
     experience_years: int = Field(default=0, ge=0)
+
+
 class ProviderCreate(BaseModel):
     user_id: int
     business_name: str = Field(min_length=2, max_length=150)
