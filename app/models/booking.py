@@ -1,6 +1,7 @@
 from sqlalchemy import (
     Column,
     Integer,
+    Numeric,
     String,
     DateTime,
     ForeignKey,
@@ -65,8 +66,73 @@ class Booking(Base):
         default=BookingStatus.PENDING.value
     )
 
+    # Financial & Pricing Ledger
+    base_amount = Column(
+        Numeric(10, 2),
+        default=0.00,
+        nullable=False
+    )
+
+    extra_amount = Column(
+        Numeric(10, 2),
+        default=0.00,
+        nullable=False
+    )
+
+    platform_fee = Column(
+        Numeric(10, 2),
+        default=29.00,
+        nullable=False
+    )
+
+    tax_amount = Column(
+        Numeric(10, 2),
+        default=0.00,
+        nullable=False
+    )
+
+    total_amount_numeric = Column(
+        Numeric(10, 2),
+        default=0.00,
+        nullable=False
+    )
+
+    provider_payout = Column(
+        Numeric(10, 2),
+        default=0.00,
+        nullable=False
+    )
+
+    platform_commission = Column(
+        Numeric(10, 2),
+        default=0.00,
+        nullable=False
+    )
+
     total_amount = Column(
         String(50),
+        nullable=True
+    )
+
+    # Security & Verification
+    start_otp = Column(
+        String(6),
+        nullable=True
+    )
+
+    completion_otp = Column(
+        String(6),
+        nullable=True
+    )
+
+    payment_status = Column(
+        String(30),
+        default="IN_ESCROW",
+        nullable=False
+    )
+
+    cancellation_reason = Column(
+        String(500),
         nullable=True
     )
 
@@ -85,4 +151,4 @@ class Booking(Base):
     customer = relationship("User", foreign_keys=[customer_id])
     provider = relationship("Provider", foreign_keys=[provider_id])
     category = relationship("Category", foreign_keys=[category_id])
-
+    extra_quotes = relationship("BookingExtraQuote", back_populates="booking", cascade="all, delete-orphan")

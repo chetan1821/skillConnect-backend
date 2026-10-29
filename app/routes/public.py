@@ -9,6 +9,7 @@ from app.models.provider_category import ProviderCategory
 from app.models.user import User
 from app.schemas.category import CategoryResponse
 from app.schemas.provider import ProviderResponse
+from app.services.admin_service import get_system_announcement
 
 router = APIRouter(
     prefix="/public",
@@ -33,7 +34,7 @@ def get_public_providers(
     db: Session = Depends(get_db)
 ):
     """
-    Publicly accessible list of active and verified providers with their assigned categories.
+    Publicly accessible list of active and verified providers with their assigned categories and pricing rates.
     """
     query = (
         db.query(Provider, User)
@@ -91,6 +92,8 @@ def get_public_providers(
             "phone_number": user.phone_number,
             "description": provider.description,
             "experience_years": provider.experience_years,
+            "visiting_fee": float(provider.visiting_fee or 199.00),
+            "hourly_rate": float(provider.hourly_rate or 300.00),
             "is_verified": provider.is_verified,
             "is_active": provider.is_active,
             "categories": category_names,
@@ -144,6 +147,8 @@ def get_public_provider_detail(
         "phone_number": user.phone_number,
         "description": provider.description,
         "experience_years": provider.experience_years,
+        "visiting_fee": float(provider.visiting_fee or 199.00),
+        "hourly_rate": float(provider.hourly_rate or 300.00),
         "is_verified": provider.is_verified,
         "is_active": provider.is_active,
         "categories": [c[0] for c in assigned_categories],
@@ -151,3 +156,10 @@ def get_public_provider_detail(
         "reviews_count": 140
     }
 
+
+@router.get("/announcement")
+def get_public_announcement(db: Session = Depends(get_db)):
+    ann = get_system_announcement(db)
+    if ann.get("is_active"):
+        return ann
+    return {"is_active": False, "message": None, "banner_type": "info"}

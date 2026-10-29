@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   Search,
-  MapPin,
   Shield,
   Star,
   CheckCircle,
@@ -14,7 +13,7 @@ export const Hero = ({
   setSearchQuery,
   selectedCategory,
   setSelectedCategory,
-  categories,
+  categories = [],
   onSearchSubmit
 }) => {
   return (
@@ -30,9 +29,9 @@ export const Hero = ({
         {/* Trust pill */}
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs sm:text-sm font-semibold mb-6 shadow-sm">
           <span className="flex h-2 w-2 rounded-full bg-indigo-600 animate-pulse" />
-          <span>India & Global Certified Service Network</span>
+          <span>SkillConnect Verified Marketplace</span>
           <span className="text-indigo-300">•</span>
-          <span className="text-indigo-800 font-bold">100% Background-Verified</span>
+          <span className="text-indigo-800 font-bold">Background Checked Specialists</span>
         </div>
 
         {/* Hero headline */}
@@ -44,7 +43,7 @@ export const Hero = ({
         </h1>
 
         <p className="mt-6 text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto font-normal leading-relaxed">
-          From master electricians and emergency plumbers to artisan carpenters and deep cleaning — connect with vetted experts in minutes.
+          From master electricians and emergency plumbers to carpenters and home cleaning — connect with verified experts on demand.
         </p>
 
         {/* Search Bar Container */}
@@ -61,7 +60,7 @@ export const Hero = ({
               <Search className="w-5 h-5 text-indigo-500 mr-3 flex-shrink-0" />
               <input
                 type="text"
-                placeholder="What service do you need? (e.g. AC fix, wiring, leak)"
+                placeholder="What service do you need? (e.g. electrical, leak, repair)"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full bg-transparent border-none text-slate-900 placeholder-slate-400 text-sm focus:outline-none"
@@ -94,38 +93,40 @@ export const Hero = ({
             </button>
           </form>
 
-          {/* Quick Category Chips */}
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-xs text-slate-500">
-            <span className="font-semibold text-slate-700">Popular:</span>
-            {['Electrical Services', 'Plumbing & Piping', 'HVAC & AC Service', 'Deep Home Cleaning'].map((name) => (
-              <button
-                key={name}
-                type="button"
-                onClick={() => {
-                  setSelectedCategory(name);
-                  onSearchSubmit();
-                }}
-                className={`px-3 py-1 rounded-full border transition-all ${
-                  selectedCategory === name
-                    ? 'bg-indigo-600 text-white border-indigo-600 font-semibold'
-                    : 'bg-white hover:bg-indigo-50 text-slate-600 border-slate-200'
-                }`}
-              >
-                {name}
-              </button>
-            ))}
-          </div>
+          {/* Real Dynamic Category Chips */}
+          {categories.length > 0 && (
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-xs text-slate-500">
+              <span className="font-semibold text-slate-700">Explore:</span>
+              {categories.slice(0, 5).map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedCategory(cat.name);
+                    onSearchSubmit();
+                  }}
+                  className={`px-3 py-1 rounded-full border transition-all ${
+                    selectedCategory === cat.name
+                      ? 'bg-indigo-600 text-white border-indigo-600 font-semibold'
+                      : 'bg-white hover:bg-indigo-50 text-slate-600 border-slate-200'
+                  }`}
+                >
+                  {cat.name}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Key Features / Stats Bar */}
+        {/* Key Features Bar */}
         <div className="mt-14 pt-8 border-t border-slate-200/80 grid grid-cols-2 md:grid-cols-4 gap-6 text-left">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0">
               <Shield className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-sm font-bold text-slate-900">Verified Pros Only</div>
-              <div className="text-xs text-slate-500">ID & background cleared</div>
+              <div className="text-sm font-bold text-slate-900">Verified Pros</div>
+              <div className="text-xs text-slate-500">Identity & license checked</div>
             </div>
           </div>
 
@@ -134,8 +135,8 @@ export const Hero = ({
               <Star className="w-5 h-5 fill-current" />
             </div>
             <div>
-              <div className="text-sm font-bold text-slate-900">4.9 / 5.0 Star Rating</div>
-              <div className="text-xs text-slate-500">Based on 12,000+ reviews</div>
+              <div className="text-sm font-bold text-slate-900">Quality Assured</div>
+              <div className="text-xs text-slate-500">Real customer feedback</div>
             </div>
           </div>
 
@@ -144,8 +145,8 @@ export const Hero = ({
               <Clock className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-sm font-bold text-slate-900">Rapid Response</div>
-              <div className="text-xs text-slate-500">Avg. 15 min reply time</div>
+              <div className="text-sm font-bold text-slate-900">Direct Scheduling</div>
+              <div className="text-xs text-slate-500">Pick preferred time slot</div>
             </div>
           </div>
 
@@ -154,8 +155,8 @@ export const Hero = ({
               <CheckCircle className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-sm font-bold text-slate-900">Fixed Upfront Pricing</div>
-              <div className="text-xs text-slate-500">No surprise charges</div>
+              <div className="text-sm font-bold text-slate-900">Clear Pricing</div>
+              <div className="text-xs text-slate-500">Upfront job estimates</div>
             </div>
           </div>
         </div>
@@ -163,4 +164,3 @@ export const Hero = ({
     </section>
   );
 };
-

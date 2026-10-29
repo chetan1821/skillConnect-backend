@@ -12,6 +12,7 @@ import { MyBookingsModal } from './components/MyBookingsModal';
 import { AdminDashboard } from './components/admin/AdminDashboard';
 import { ProviderPortal } from './components/ProviderPortal';
 import { Toast } from './components/Toast';
+import { AnnouncementBanner } from './components/AnnouncementBanner';
 import { api } from './api/client';
 
 const MainLayout = () => {
@@ -94,6 +95,9 @@ const MainLayout = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 font-sans text-slate-900 selection:bg-indigo-600 selection:text-white">
+      {/* Global System Announcement Banner */}
+      <AnnouncementBanner />
+
       {/* Navigation Header */}
       <Navbar
         onOpenAuth={handleOpenAuth}
@@ -153,6 +157,7 @@ const MainLayout = () => {
       {/* Footer */}
       {activeRoleView === 'customer' && (
         <Footer
+          categories={categories}
           onSelectCategory={(catName) => {
             setSelectedCategory(catName);
             handleSearchSubmit();

@@ -9,7 +9,13 @@ import {
   CheckCircle2,
   XCircle,
   Phone,
-  RefreshCw
+  RefreshCw,
+  Key,
+  ShieldCheck,
+  Lock,
+  PlusCircle,
+  Check,
+  Ban
 } from 'lucide-react';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
@@ -19,6 +25,7 @@ export const MyBookingsModal = ({ isOpen, onClose }) => {
   const [bookings, setBookings] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [cancellingId, setCancellingId] = useState(null);
+  const [resolvingQuoteId, setResolvingQuoteId] = useState(null);
 
   const fetchBookings = async () => {
     setIsLoading(true);
@@ -42,14 +49,28 @@ export const MyBookingsModal = ({ isOpen, onClose }) => {
     setCancellingId(bookingId);
     try {
       await api.cancelBooking(bookingId);
-      showToast('Booking cancelled successfully', 'info');
-      setBookings(prev =>
-        prev.map(b => (b.id === bookingId ? { ...b, status: 'Cancelled' } : b))
-      );
+      showToast('Booking cancelled and escrow refunded', 'info');
+      fetchBookings();
     } catch (err) {
       showToast(err.message || 'Failed to cancel booking', 'error');
     } finally {
       setCancellingId(null);
+    }
+  };
+
+  const handleResolveQuote = async (quoteId, action) => {
+    setResolvingQuoteId(quoteId);
+    try {
+      await api.resolveExtraQuote(quoteId, action);
+      showToast(
+        action === 'APPROVE' ? 'Extra quote approved and invoice updated!' : 'Extra quote rejected',
+        action === 'APPROVE' ? 'success' : 'info'
+      );
+      fetchBookings();
+    } catch (err) {
+      showToast(err.message || 'Failed to resolve quote', 'error');
+    } finally {
+      setResolvingQuoteId(null);
     }
   };
 
@@ -78,7 +99,7 @@ export const MyBookingsModal = ({ isOpen, onClose }) => {
             </div>
             <div>
               <h2 className="text-xl font-bold text-slate-900 tracking-tight">My Service Appointments</h2>
-              <p className="text-xs text-slate-500">Track and manage your scheduled service calls</p>
+              <p className="text-xs text-slate-500">Track and manage your scheduled service calls with Escrow security</p>
             </div>
           </div>
 
@@ -114,11 +135,15 @@ export const MyBookingsModal = ({ isOpen, onClose }) => {
           ) : (
             bookings.map((b) => {
               const canCancel = b.status === 'Pending' || b.status === 'Accepted';
+              const isActive = b.status !== 'Completed' && b.status !== 'Cancelled' && b.status !== 'Declined';
+              const pendingQuotes = (b.extra_quotes || []).filter(q => q.status === 'PENDING');
+
               return (
                 <div
                   key={b.id}
-                  className="p-5 rounded-2xl border border-slate-200/90 bg-white hover:border-indigo-300 transition-all shadow-sm space-y-3"
+                  className="p-5 rounded-2xl border border-slate-200/90 bg-white hover:border-indigo-300 transition-all shadow-sm space-y-3.5"
                 >
+                  {/* Top Bar */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-bold text-slate-900 text-sm">
@@ -138,12 +163,16 @@ export const MyBookingsModal = ({ isOpen, onClose }) => {
                       >
                         {b.status}
                       </span>
-                      <span className="text-xs font-bold text-slate-900">
-                        {b.total_amount || '$50.00'}
+                      <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold text-[10px] border border-slate-200">
+                        {b.payment_status || 'IN_ESCROW'}
+                      </span>
+                      <span className="text-xs font-extrabold text-slate-900">
+                        {b.total_amount || `₹${b.total_amount_numeric}`}
                       </span>
                     </div>
                   </div>
 
+                  {/* Core Details Grid */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-600">
                     <div className="flex items-center gap-2">
                       <Calendar className="w-3.5 h-3.5 text-indigo-600 flex-shrink-0" />
@@ -169,6 +198,74 @@ export const MyBookingsModal = ({ isOpen, onClose }) => {
                     </div>
                   )}
 
+                  {/* Security OTP Verification Cards (Active Bookings Only) */}
+                  {isActive && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                      <div className="p-3 rounded-xl bg-amber-50/90 border border-amber-200/90 flex items-center justify-between">
+                        <div>
+                          <div className="text-[10px] uppercase font-bold text-amber-800 flex items-center gap-1">
+                            <Key className="w-3 h-3 text-amber-600" />
+                            <span>Start Job OTP</span>
+                          </div>
+                          <div className="text-[11px] text-amber-700">Give on doorstep arrival</div>
+                        </div>
+                        <span className="text-xl font-mono font-extrabold text-amber-950 tracking-wider bg-white/80 px-2.5 py-1 rounded-lg border border-amber-200">
+                          {b.start_otp || '----'}
+                        </span>
+                      </div>
+
+                      <div className="p-3 rounded-xl bg-emerald-50/90 border border-emerald-200/90 flex items-center justify-between">
+                        <div>
+                          <div className="text-[10px] uppercase font-bold text-emerald-800 flex items-center gap-1">
+                            <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                            <span>Completion OTP</span>
+                          </div>
+                          <div className="text-[11px] text-emerald-700">Give ONLY when work is finished</div>
+                        </div>
+                        <span className="text-xl font-mono font-extrabold text-emerald-950 tracking-wider bg-white/80 px-2.5 py-1 rounded-lg border border-emerald-200">
+                          {b.completion_otp || '----'}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Pending Extra Quotes Action Required */}
+                  {pendingQuotes.length > 0 && (
+                    <div className="p-3.5 rounded-2xl bg-indigo-50/90 border border-indigo-200 space-y-2">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-900">
+                        <AlertCircle className="w-4 h-4 text-indigo-600 flex-shrink-0" />
+                        <span>Action Required: Specialist Submitted Extra Parts/Labor Quote</span>
+                      </div>
+                      {pendingQuotes.map(q => (
+                        <div key={q.id} className="p-3 rounded-xl bg-white border border-indigo-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <div>
+                            <div className="text-xs font-bold text-slate-900">{q.title}</div>
+                            {q.description && <div className="text-[11px] text-slate-500">{q.description}</div>}
+                            <div className="text-xs font-extrabold text-indigo-600 mt-0.5">Amount: ₹{q.amount}</div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              disabled={resolvingQuoteId === q.id}
+                              onClick={() => handleResolveQuote(q.id, 'REJECT')}
+                              className="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold transition-colors disabled:opacity-50"
+                            >
+                              Decline
+                            </button>
+                            <button
+                              disabled={resolvingQuoteId === q.id}
+                              onClick={() => handleResolveQuote(q.id, 'APPROVE')}
+                              className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm transition-all disabled:opacity-50 flex items-center gap-1"
+                            >
+                              <Check className="w-3.5 h-3.5" />
+                              <span>Approve (₹{q.amount})</span>
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Cancellation */}
                   {canCancel && (
                     <div className="flex justify-end pt-1">
                       <button
@@ -176,7 +273,7 @@ export const MyBookingsModal = ({ isOpen, onClose }) => {
                         onClick={() => handleCancel(b.id)}
                         className="px-3 py-1 rounded-lg border border-rose-200 text-rose-700 hover:bg-rose-50 text-xs font-semibold transition-colors disabled:opacity-50"
                       >
-                        {cancellingId === b.id ? 'Cancelling...' : 'Cancel Appointment'}
+                        {cancellingId === b.id ? 'Cancelling...' : 'Cancel Appointment & Refund Escrow'}
                       </button>
                     </div>
                   )}
@@ -189,4 +286,3 @@ export const MyBookingsModal = ({ isOpen, onClose }) => {
     </div>
   );
 };
-
