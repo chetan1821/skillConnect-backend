@@ -1,4 +1,5 @@
-from app.schemas.booking import BookingStatusUpdate
+from app.schemas.booking import BookingStatusUpdate, DisputeResolveRequest
+from app.services.booking_service import list_all_disputes, resolve_booking_dispute
 from fastapi import APIRouter, Depends,Query
 from sqlalchemy.orm import Session
 
@@ -434,3 +435,29 @@ def get_provider_categories_management(
     db: Session = Depends(get_db)
 ):
     return get_provider_categories_detail(db=db, provider_id=provider_id)
+
+
+# -------------------------------------------------------------
+# Dispute Management & Arbitration
+# -------------------------------------------------------------
+@router.get("/disputes")
+def get_all_disputes(
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    return list_all_disputes(db=db)
+
+
+@router.post("/disputes/{booking_id}/resolve")
+def resolve_dispute(
+    booking_id: int,
+    resolve_data: DisputeResolveRequest,
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    return resolve_booking_dispute(
+        db=db,
+        booking_id=booking_id,
+        admin_user=current_admin,
+        data=resolve_data
+    )

@@ -1,3 +1,4 @@
+import NotificationDropdown from './NotificationDropdown';
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -97,6 +98,9 @@ export const Navbar = ({ onOpenAuth, onSelectCategory, onOpenMyBookings }) => {
               <Moon className="w-4 h-4 transition-transform rotate-0 scale-100 text-slate-700" />
             )}
           </button>
+
+          {/* Notifications Center */}
+          {user && <NotificationDropdown />}
 
           {/* Quick Portal Switcher Pills for logged-in staff/customers */}
           {user && user.role === 'Admin' && (

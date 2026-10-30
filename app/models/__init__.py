@@ -7,3 +7,6 @@ from app.models.audit_log import AuditLog
 from app.models.announcement import SystemAnnouncement
 from app.models.wallet import ProviderWallet, WalletTransaction
 from app.models.extra_quote import BookingExtraQuote
+from app.models.review import Review
+from app.models.chat_message import ChatMessage
+from app.models.notification import Notification

@@ -136,6 +136,33 @@ class Booking(Base):
         nullable=True
     )
 
+    # Dispute Management
+    dispute_status = Column(
+        String(50),
+        default="NONE",
+        nullable=False
+    )
+
+    dispute_reason = Column(
+        String(500),
+        nullable=True
+    )
+
+    dispute_resolution = Column(
+        String(50),
+        nullable=True
+    )
+
+    dispute_notes = Column(
+        String(1000),
+        nullable=True
+    )
+
+    dispute_resolved_at = Column(
+        DateTime(timezone=True),
+        nullable=True
+    )
+
     created_at = Column(
         DateTime(timezone=True),
         server_default=func.now()
@@ -152,3 +179,5 @@ class Booking(Base):
     provider = relationship("Provider", foreign_keys=[provider_id])
     category = relationship("Category", foreign_keys=[category_id])
     extra_quotes = relationship("BookingExtraQuote", back_populates="booking", cascade="all, delete-orphan")
+    review = relationship("Review", back_populates="booking", uselist=False, cascade="all, delete-orphan")
+    chat_messages = relationship("ChatMessage", back_populates="booking", cascade="all, delete-orphan")

@@ -1,7 +1,9 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, Query, HTTPException
+from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 
-from app.auth.dependencies import get_current_user
+from app.auth.dependencies import get_current_user, get_user_from_token, optional_security
+from fastapi.security import HTTPAuthorizationCredentials
 from app.database.database import get_db
 from app.models.user import User
 from app.schemas.booking import (
@@ -15,6 +17,14 @@ from app.schemas.booking import (
     ExtraQuoteAction,
     ProviderWalletResponse,
     WithdrawRequest,
+    ReviewCreate,
+    ReviewResponse,
+    ChatMessageCreate,
+    ChatMessageResponse,
+    DisputeCreate,
+    NotificationResponse,
+    PaymentCheckoutRequest,
+    PaymentCheckoutResponse
 )
 from app.models.enums import BookingStatus
 from app.services.booking_service import (
@@ -28,6 +38,15 @@ from app.services.booking_service import (
     customer_resolve_extra_quote,
     get_provider_wallet_details,
     provider_request_withdrawal,
+    create_booking_review,
+    send_chat_message,
+    get_chat_messages,
+    raise_booking_dispute,
+    process_payment_checkout,
+    generate_booking_invoice_html,
+    get_user_notifications,
+    mark_notification_read,
+    mark_all_notifications_read
 )
 
 router = APIRouter(
@@ -65,12 +84,51 @@ def list_my_bookings(
     db: Session = Depends(get_db)
 ):
     """
-    Retrieve all bookings placed by the current customer, including security OTPs.
+    Retrieve all service bookings placed by current customer.
     """
     return get_customer_bookings(
         db=db,
         customer_id=current_user.id
     )
+
+
+# -------------------------------------------------------------
+# Notifications
+# -------------------------------------------------------------
+@router.get(
+    "/notifications",
+    response_model=list[NotificationResponse]
+)
+def list_my_notifications(
+    limit: int = 30,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Retrieve recent in-app notifications for the authenticated user.
+    """
+    return get_user_notifications(db=db, user_id=current_user.id, limit=limit)
+
+
+@router.patch(
+    "/notifications/{notification_id}/read"
+)
+def mark_one_notification_read(
+    notification_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return mark_notification_read(db=db, notification_id=notification_id, user_id=current_user.id)
+
+
+@router.post(
+    "/notifications/read-all"
+)
+def mark_all_my_notifications_read(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return mark_all_notifications_read(db=db, user_id=current_user.id)
 
 
 @router.get(
@@ -82,7 +140,7 @@ def list_provider_bookings(
     db: Session = Depends(get_db)
 ):
     """
-    Retrieve all booking requests assigned to the logged-in provider.
+    Retrieve all bookings assigned to the authenticated provider.
     """
     return get_provider_bookings(
         db=db,
@@ -96,19 +154,19 @@ def list_provider_bookings(
 )
 def change_booking_status(
     booking_id: int,
-    status_data: BookingStatusUpdate,
+    data: BookingStatusUpdate,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
-    Provider accepts or declines a booking request.
+    Update booking lifecycle status (Accepted, Declined, Cancelled, etc.).
     """
     return update_booking_status(
         db=db,
         booking_id=booking_id,
         current_user=current_user,
-        new_status=status_data.status,
-        cancellation_reason=status_data.cancellation_reason
+        new_status=data.status,
+        cancellation_reason=data.cancellation_reason
     )
 
 
@@ -123,7 +181,7 @@ def start_booking_job(
     db: Session = Depends(get_db)
 ):
     """
-    Provider starts the job after verifying the Customer's Start OTP.
+    Provider verifies the 4-digit Start OTP provided by the customer at the doorstep.
     """
     return provider_start_job(
         db=db,
@@ -134,8 +192,7 @@ def start_booking_job(
 
 
 @router.post(
-    "/{booking_id}/complete",
-    response_model=BookingResponse
+    "/{booking_id}/complete"
 )
 def complete_booking_job(
     booking_id: int,
@@ -144,7 +201,8 @@ def complete_booking_job(
     db: Session = Depends(get_db)
 ):
     """
-    Provider completes work and verifies Customer Completion OTP to release Escrow payout.
+    Provider enters the Completion OTP provided by the customer upon satisfaction.
+    Releases escrow payment directly to provider's available wallet balance.
     """
     return provider_complete_job(
         db=db,
@@ -159,24 +217,24 @@ def complete_booking_job(
     response_model=ExtraQuoteResponse,
     status_code=status.HTTP_201_CREATED
 )
-def submit_extra_quote(
+def request_extra_quote(
     booking_id: int,
     data: ExtraQuoteCreate,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
-    Provider submits an additional parts or labor quote for customer approval.
+    Provider submits an additional materials or service fee quote for customer approval.
     """
     return provider_submit_extra_quote(
         db=db,
         user_id=current_user.id,
         booking_id=booking_id,
-        quote_data=data
+        data=data
     )
 
 
-@router.patch(
+@router.post(
     "/extra-quotes/{quote_id}"
 )
 def resolve_extra_quote(
@@ -186,7 +244,7 @@ def resolve_extra_quote(
     db: Session = Depends(get_db)
 ):
     """
-    Customer approves or rejects a provider's extra parts/materials quote.
+    Customer approves or rejects a pending extra quote requested by the provider.
     """
     return customer_resolve_extra_quote(
         db=db,
@@ -196,6 +254,162 @@ def resolve_extra_quote(
     )
 
 
+# -------------------------------------------------------------
+# Reviews & Ratings
+# -------------------------------------------------------------
+@router.post(
+    "/{booking_id}/review",
+    response_model=ReviewResponse,
+    status_code=status.HTTP_201_CREATED
+)
+def submit_review(
+    booking_id: int,
+    data: ReviewCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Customer submits rating and verified review for a completed service booking.
+    """
+    return create_booking_review(
+        db=db,
+        customer_id=current_user.id,
+        booking_id=booking_id,
+        data=data
+    )
+
+
+# -------------------------------------------------------------
+# In-App Chat Messaging
+# -------------------------------------------------------------
+@router.post(
+    "/{booking_id}/messages",
+    response_model=ChatMessageResponse
+)
+def post_chat_message(
+    booking_id: int,
+    data: ChatMessageCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Send an in-app message between customer and provider for a specific booking.
+    """
+    return send_chat_message(
+        db=db,
+        booking_id=booking_id,
+        sender_id=current_user.id,
+        data=data
+    )
+
+
+@router.get(
+    "/{booking_id}/messages",
+    response_model=list[ChatMessageResponse]
+)
+def list_chat_messages(
+    booking_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get conversation thread for a booking. Marks received messages as read.
+    """
+    return get_chat_messages(
+        db=db,
+        booking_id=booking_id,
+        user_id=current_user.id
+    )
+
+
+# -------------------------------------------------------------
+# Disputes
+# -------------------------------------------------------------
+@router.post(
+    "/{booking_id}/dispute"
+)
+def dispute_booking(
+    booking_id: int,
+    data: DisputeCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Customer raises a dispute or quality concern before sharing the Completion OTP.
+    """
+    return raise_booking_dispute(
+        db=db,
+        customer_id=current_user.id,
+        booking_id=booking_id,
+        data=data
+    )
+
+
+# -------------------------------------------------------------
+# Payments & Invoices
+# -------------------------------------------------------------
+@router.post(
+    "/{booking_id}/pay",
+    response_model=PaymentCheckoutResponse
+)
+def pay_for_booking(
+    booking_id: int,
+    data: PaymentCheckoutRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Process payment checkout via UPI / Card / Netbanking with escrow lock.
+    """
+    return process_payment_checkout(
+        db=db,
+        booking_id=booking_id,
+        customer_id=current_user.id,
+        data=data
+    )
+
+
+@router.get(
+    "/{booking_id}/invoice",
+    response_class=HTMLResponse
+)
+def get_booking_invoice(
+    booking_id: int,
+    token: str | None = Query(None),
+    auth: HTTPAuthorizationCredentials | None = Depends(optional_security),
+    db: Session = Depends(get_db)
+):
+    """
+    Generate clean, printable HTML tax invoice with security audit trail.
+    Supports both Authorization header and ?token= query parameter.
+    """
+    current_user = None
+    if auth and auth.credentials:
+        try:
+            current_user = get_user_from_token(auth.credentials, db)
+        except Exception:
+            pass
+    if not current_user and token:
+        try:
+            current_user = get_user_from_token(token, db)
+        except Exception:
+            pass
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication token required to view invoice"
+        )
+
+    return generate_booking_invoice_html(
+        db=db,
+        booking_id=booking_id,
+        current_user=current_user
+    )
+
+
+# -------------------------------------------------------------
+# Provider Wallet
+# -------------------------------------------------------------
 @router.get(
     "/provider/wallet",
     response_model=ProviderWalletResponse

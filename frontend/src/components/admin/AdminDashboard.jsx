@@ -1,3 +1,4 @@
+import AdminDisputeManagement from './AdminDisputeManagement';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../api/client';
@@ -24,7 +25,8 @@ import {
   DollarSign,
   Receipt,
   Percent,
-  Wallet
+  Wallet,
+  Scale
 } from 'lucide-react';
 
 export const AdminDashboard = () => {
@@ -151,6 +153,17 @@ export const AdminDashboard = () => {
                 Providers
               </button>
 
+              <button
+                onClick={() => setActiveTab('disputes')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                  activeTab === 'disputes'
+                    ? 'bg-red-600 text-white shadow-md'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Scale className="w-3.5 h-3.5" />
+                Disputes
+              </button>
               <button
                 onClick={() => setActiveTab('audit')}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 ${
@@ -390,6 +403,7 @@ export const AdminDashboard = () => {
         {activeTab === 'users' && <UserManagement />}
         {activeTab === 'categories' && <CategoryManagement />}
         {activeTab === 'providers' && <ProviderManagement />}
+        {activeTab === 'disputes' && <AdminDisputeManagement />}
         {activeTab === 'audit' && <AuditLogsView />}
       </div>
 

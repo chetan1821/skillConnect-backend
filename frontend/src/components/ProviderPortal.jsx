@@ -1,3 +1,5 @@
+import BookingTimeline from './BookingTimeline';
+import BookingChatDrawer from './BookingChatDrawer';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api/client';
@@ -20,7 +22,8 @@ import {
   X,
   Send,
   AlertCircle,
-  Receipt
+  Receipt,
+  MessageSquare
 } from 'lucide-react';
 
 export const ProviderPortal = ({ onSwitchToCustomer }) => {
@@ -29,6 +32,7 @@ export const ProviderPortal = ({ onSwitchToCustomer }) => {
   const [wallet, setWallet] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [chatBooking, setChatBooking] = useState(null);
 
   // OTP Modals
   const [startOtpModalBooking, setStartOtpModalBooking] = useState(null);
@@ -363,6 +367,9 @@ export const ProviderPortal = ({ onSwitchToCustomer }) => {
                       )}
                     </div>
 
+                    {/* Feature 4: Stepper Timeline */}
+                    <BookingTimeline booking={req} />
+
                     {/* Extra Quotes attached */}
                     {req.extra_quotes && req.extra_quotes.length > 0 && (
                       <div className="pt-1 flex items-center gap-2 flex-wrap">
@@ -377,6 +384,14 @@ export const ProviderPortal = ({ onSwitchToCustomer }) => {
 
                   {/* Actions based on status */}
                   <div className="flex items-center gap-2 flex-wrap flex-shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setChatBooking(req)}
+                      className="px-3 py-2 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900 text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5" />
+                      <span>Chat Customer</span>
+                    </button>
                     {req.status === 'Pending' && (
                       <>
                         <button
@@ -625,6 +640,9 @@ export const ProviderPortal = ({ onSwitchToCustomer }) => {
           </div>
         </div>
       )}
+
+      {/* Feature 3: In-App Chat Drawer */}
+      {chatBooking && <BookingChatDrawer booking={chatBooking} onClose={() => setChatBooking(null)} />}
 
       {/* Withdraw Modal */}
       {isWithdrawModalOpen && (

@@ -2,6 +2,9 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field
 
 
+# -------------------------------------------------------------
+# Extra Quotes
+# -------------------------------------------------------------
 class ExtraQuoteCreate(BaseModel):
     title: str = Field(..., min_length=2, max_length=150)
     description: str | None = Field(default=None, max_length=500)
@@ -26,6 +29,116 @@ class ExtraQuoteAction(BaseModel):
     action: str = Field(..., description="APPROVE or REJECT")
 
 
+# -------------------------------------------------------------
+# Reviews
+# -------------------------------------------------------------
+class ReviewCreate(BaseModel):
+    rating: int = Field(..., ge=1, le=5)
+    title: str | None = Field(default=None, max_length=150)
+    comment: str = Field(..., min_length=5, max_length=1000)
+    tags: str | None = Field(default=None, max_length=255)
+
+
+class ReviewResponse(BaseModel):
+    id: int
+    booking_id: int
+    customer_id: int
+    provider_id: int
+    rating: int
+    title: str | None = None
+    comment: str
+    tags: str | None = None
+    customer_name: str | None = None
+    provider_business_name: str | None = None
+    created_at: datetime | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# -------------------------------------------------------------
+# Chat Messages
+# -------------------------------------------------------------
+class ChatMessageCreate(BaseModel):
+    message: str = Field(..., min_length=1, max_length=2000)
+    attachment_url: str | None = Field(default=None, max_length=500)
+
+
+class ChatMessageResponse(BaseModel):
+    id: int
+    booking_id: int
+    sender_id: int
+    sender_name: str | None = None
+    sender_role: str | None = None
+    message: str
+    attachment_url: str | None = None
+    is_read: bool = False
+    created_at: datetime | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# -------------------------------------------------------------
+# Notifications
+# -------------------------------------------------------------
+class NotificationResponse(BaseModel):
+    id: int
+    user_id: int
+    title: str
+    message: str
+    link_type: str | None = None
+    link_id: int | None = None
+    is_read: bool = False
+    created_at: datetime | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# -------------------------------------------------------------
+# Disputes & Arbitration
+# -------------------------------------------------------------
+class DisputeCreate(BaseModel):
+    reason: str = Field(..., min_length=5, max_length=500)
+    notes: str | None = Field(default=None, max_length=1000)
+
+
+class DisputeResolveRequest(BaseModel):
+    action: str = Field(..., description="REFUND, PAYOUT, or SPLIT")
+    resolution_notes: str | None = Field(default=None, max_length=1000)
+
+
+class DisputeResponse(BaseModel):
+    booking_id: int
+    customer_name: str
+    provider_name: str
+    amount: float
+    dispute_status: str
+    dispute_reason: str | None = None
+    dispute_notes: str | None = None
+    dispute_resolution: str | None = None
+    created_at: datetime | None = None
+
+
+# -------------------------------------------------------------
+# Payment Checkout
+# -------------------------------------------------------------
+class PaymentCheckoutRequest(BaseModel):
+    payment_method: str = Field(default="UPI", description="UPI, CARD, NETBANKING, WALLET")
+    payment_gateway: str = Field(default="MOCK", description="MOCK, RAZORPAY, STRIPE")
+
+
+class PaymentCheckoutResponse(BaseModel):
+    booking_id: int
+    transaction_id: str
+    status: str
+    amount_paid: float
+    payment_method: str
+    receipt_url: str | None = None
+    message: str
+
+
+# -------------------------------------------------------------
+# OTP Verification
+# -------------------------------------------------------------
 class StartJobRequest(BaseModel):
     start_otp: str = Field(..., min_length=4, max_length=6)
 
@@ -34,6 +147,9 @@ class CompleteJobRequest(BaseModel):
     completion_otp: str = Field(..., min_length=4, max_length=6)
 
 
+# -------------------------------------------------------------
+# Booking Core
+# -------------------------------------------------------------
 class BookingCreate(BaseModel):
     provider_id: int
     category_id: int | None = None
@@ -77,8 +193,14 @@ class BookingResponse(BaseModel):
     completion_otp: str | None = None
     cancellation_reason: str | None = None
 
-    # Extra Quotes
+    # Dispute Details
+    dispute_status: str | None = "NONE"
+    dispute_reason: str | None = None
+    dispute_resolution: str | None = None
+
+    # Extra Quotes & Review
     extra_quotes: list[ExtraQuoteResponse] = []
+    review: ReviewResponse | None = None
 
     created_at: datetime | None = None
 
@@ -94,6 +216,9 @@ class BookingResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+# -------------------------------------------------------------
+# Wallet
+# -------------------------------------------------------------
 class WalletTransactionResponse(BaseModel):
     id: int
     wallet_id: int

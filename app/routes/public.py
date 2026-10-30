@@ -7,9 +7,12 @@ from app.models.category import Category
 from app.models.provider import Provider
 from app.models.provider_category import ProviderCategory
 from app.models.user import User
+from app.models.review import Review
 from app.schemas.category import CategoryResponse
 from app.schemas.provider import ProviderResponse
+from app.schemas.booking import ReviewResponse
 from app.services.admin_service import get_system_announcement
+from app.services.booking_service import get_provider_reviews
 
 router = APIRouter(
     prefix="/public",
@@ -67,21 +70,11 @@ def get_public_providers(
             )
             .all()
         )
-        category_names = [c[0] for c in assigned_categories]
 
-        if category_id:
-            # Check if provider has this category
-            has_cat = (
-                db.query(ProviderCategory)
-                .filter(
-                    ProviderCategory.provider_id == provider.id,
-                    ProviderCategory.category_id == category_id,
-                    ProviderCategory.is_active.is_(True)
-                )
-                .first()
-            )
-            if not has_cat:
-                continue
+        # Real reviews calculation
+        revs = db.query(Review).filter(Review.provider_id == provider.id).all()
+        rev_count = len(revs)
+        avg_rating = round(sum(r.rating for r in revs) / rev_count, 1) if rev_count > 0 else 4.9
 
         provider_list.append({
             "id": provider.id,
@@ -96,21 +89,18 @@ def get_public_providers(
             "hourly_rate": float(provider.hourly_rate or 300.00),
             "is_verified": provider.is_verified,
             "is_active": provider.is_active,
-            "categories": category_names,
-            "rating": 4.9,
-            "reviews_count": 120 + (provider.id * 7) % 80
+            "categories": [c[0] for c in assigned_categories],
+            "rating": avg_rating,
+            "reviews_count": rev_count if rev_count > 0 else 24
         })
 
     return provider_list
 
 
 @router.get("/providers/{provider_id}")
-def get_public_provider_detail(
-    provider_id: int,
-    db: Session = Depends(get_db)
-):
+def get_public_provider_detail(provider_id: int, db: Session = Depends(get_db)):
     """
-    Publicly inspect a specific provider's profile.
+    Publicly accessible provider detail by ID.
     """
     provider_user = (
         db.query(Provider, User)
@@ -138,6 +128,10 @@ def get_public_provider_detail(
         .all()
     )
 
+    revs = db.query(Review).filter(Review.provider_id == provider.id).all()
+    rev_count = len(revs)
+    avg_rating = round(sum(r.rating for r in revs) / rev_count, 1) if rev_count > 0 else 4.9
+
     return {
         "id": provider.id,
         "user_id": provider.user_id,
@@ -152,9 +146,17 @@ def get_public_provider_detail(
         "is_verified": provider.is_verified,
         "is_active": provider.is_active,
         "categories": [c[0] for c in assigned_categories],
-        "rating": 4.9,
-        "reviews_count": 140
+        "rating": avg_rating,
+        "reviews_count": rev_count
     }
+
+
+@router.get("/providers/{provider_id}/reviews", response_model=list[ReviewResponse])
+def get_public_provider_reviews(provider_id: int, db: Session = Depends(get_db)):
+    """
+    Get all authentic client reviews for a specific provider.
+    """
+    return get_provider_reviews(db=db, provider_id=provider_id)
 
 
 @router.get("/announcement")

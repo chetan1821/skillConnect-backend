@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   X,
   Star,
@@ -28,6 +28,18 @@ export const ProviderDetailModal = ({ provider, onClose, onBookingSuccess }) => 
   const [serviceNote, setServiceNote] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmedBooking, setConfirmedBooking] = useState(null);
+  const [reviews, setReviews] = useState([]);
+  const [loadingReviews, setLoadingReviews] = useState(false);
+
+  useEffect(() => {
+    if (provider?.id) {
+      setLoadingReviews(true);
+      api.getProviderReviews(provider.id)
+        .then((data) => setReviews(data || []))
+        .catch(() => setReviews([]))
+        .finally(() => setLoadingReviews(false));
+    }
+  }, [provider?.id]);
 
   if (!provider) return null;
 

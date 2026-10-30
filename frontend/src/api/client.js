@@ -312,6 +312,89 @@ class ApiClient {
       method: 'DELETE'
     });
   }
+
+  // -------------------------------------------------------------
+  // Feature 1: Reviews & Ratings
+  // -------------------------------------------------------------
+  async submitBookingReview(bookingId, reviewData) {
+    return await this.request(`/bookings/${bookingId}/review`, {
+      method: 'POST',
+      body: JSON.stringify(reviewData)
+    });
+  }
+
+  async getProviderReviews(providerId) {
+    return await this.request(`/public/providers/${providerId}/reviews`);
+  }
+
+  // -------------------------------------------------------------
+  // Feature 2: In-App Chat Messaging
+  // -------------------------------------------------------------
+  async getBookingMessages(bookingId) {
+    return await this.request(`/bookings/${bookingId}/messages`);
+  }
+
+  async sendBookingMessage(bookingId, messageData) {
+    return await this.request(`/bookings/${bookingId}/messages`, {
+      method: 'POST',
+      body: JSON.stringify(messageData)
+    });
+  }
+
+  // -------------------------------------------------------------
+  // Feature 3: Disputes & Arbitration
+  // -------------------------------------------------------------
+  async raiseBookingDispute(bookingId, disputeData) {
+    return await this.request(`/bookings/${bookingId}/dispute`, {
+      method: 'POST',
+      body: JSON.stringify(disputeData)
+    });
+  }
+
+  async getAdminDisputes() {
+    return await this.request('/admin/disputes');
+  }
+
+  async resolveAdminDispute(bookingId, resolveData) {
+    return await this.request(`/admin/disputes/${bookingId}/resolve`, {
+      method: 'POST',
+      body: JSON.stringify(resolveData)
+    });
+  }
+
+  // -------------------------------------------------------------
+  // Feature 4: Payment Checkout & Invoices
+  // -------------------------------------------------------------
+  async payBooking(bookingId, paymentData) {
+    return await this.request(`/bookings/${bookingId}/pay`, {
+      method: 'POST',
+      body: JSON.stringify(paymentData)
+    });
+  }
+
+  getBookingInvoiceUrl(bookingId) {
+    return `${BASE_URL}/bookings/${bookingId}/invoice?token=${this.token || ''}`;
+  }
+
+  // -------------------------------------------------------------
+  // Feature 5: Notifications
+  // -------------------------------------------------------------
+  async getNotifications(limit = 30) {
+    return await this.request(`/bookings/notifications?limit=${limit}`);
+  }
+
+  async markNotificationRead(id) {
+    return await this.request(`/bookings/notifications/${id}/read`, {
+      method: 'PATCH'
+    });
+  }
+
+  async markAllNotificationsRead() {
+    return await this.request('/bookings/notifications/read-all', {
+      method: 'POST'
+    });
+  }
+
 }
 
 export const api = new ApiClient();
