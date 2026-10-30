@@ -208,3 +208,4 @@ export default function ReviewModal({ booking, onClose, onSuccess }) {
     </div>
   );
 }
+

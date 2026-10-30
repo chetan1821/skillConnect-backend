@@ -125,6 +125,7 @@ export const ProviderPortal = ({ onSwitchToCustomer }) => {
       setCompleteOtpModalBooking(null);
       setCompleteOtpInput('');
       loadPortalData();
+      window.dispatchEvent(new CustomEvent('notification-updated'));
     } catch (err) {
       showToast(err.message || 'Invalid Completion OTP entered', 'error');
     } finally {
@@ -152,6 +153,7 @@ export const ProviderPortal = ({ onSwitchToCustomer }) => {
       setQuoteDescription('');
       setQuoteAmount('');
       loadPortalData();
+      window.dispatchEvent(new CustomEvent('notification-updated'));
     } catch (err) {
       showToast(err.message || 'Failed to submit extra quote', 'error');
     } finally {

@@ -1,5 +1,5 @@
 import NotificationDropdown from './NotificationDropdown';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import {
@@ -29,6 +29,14 @@ export const Navbar = ({ onOpenAuth, onSelectCategory, onOpenMyBookings }) => {
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handleOpen = () => {
+      if (onOpenMyBookings) onOpenMyBookings();
+    };
+    window.addEventListener('open-appointments', handleOpen);
+    return () => window.removeEventListener('open-appointments', handleOpen);
+  }, [onOpenMyBookings]);
 
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
 

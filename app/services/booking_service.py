@@ -663,7 +663,7 @@ def send_chat_message(db: Session, booking_id: int, sender_id: int, data: ChatMe
         user_id=recipient_id,
         title=f"New Message from {sender.full_name}",
         message=f"{data.message[:80]}",
-        link_type="BOOKING",
+        link_type="CHAT",
         link_id=booking.id
     )
 
@@ -726,12 +726,12 @@ def get_chat_messages(db: Session, booking_id: int, user_id: int) -> list[dict]:
 # -------------------------------------------------------------
 # Notifications API
 # -------------------------------------------------------------
-def get_user_notifications(db: Session, user_id: int) -> list[dict]:
+def get_user_notifications(db: Session, user_id: int, limit: int = 30) -> list[dict]:
     notifs = (
         db.query(Notification)
         .filter(Notification.user_id == user_id)
         .order_by(Notification.created_at.desc())
-        .limit(30)
+        .limit(limit)
         .all()
     )
     return [

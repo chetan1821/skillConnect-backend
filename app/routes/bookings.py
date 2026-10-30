@@ -237,6 +237,9 @@ def request_extra_quote(
 @router.post(
     "/extra-quotes/{quote_id}"
 )
+@router.patch(
+    "/extra-quotes/{quote_id}"
+)
 def resolve_extra_quote(
     quote_id: int,
     data: ExtraQuoteAction,

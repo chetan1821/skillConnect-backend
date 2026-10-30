@@ -42,6 +42,7 @@ export default function BookingChatDrawer({ booking, onClose }) {
       const data = await api.getBookingMessages(booking.id);
       setMessages(data || []);
       if (!silent) setTimeout(scrollToBottom, 100);
+      window.dispatchEvent(new CustomEvent('notification-updated'));
     } catch (err) {
       console.error('Failed to load chat messages:', err);
     } finally {
@@ -71,6 +72,7 @@ export default function BookingChatDrawer({ booking, onClose }) {
       setMessages((prev) => [...prev, newMsg]);
       setInputText('');
       setTimeout(scrollToBottom, 100);
+      window.dispatchEvent(new CustomEvent('notification-updated'));
     } catch (err) {
       console.error('Failed to send message:', err);
       alert(err.message || 'Could not send message');
@@ -202,3 +204,4 @@ export default function BookingChatDrawer({ booking, onClose }) {
     </div>
   );
 }
+

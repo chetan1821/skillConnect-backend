@@ -231,10 +231,17 @@ class ApiClient {
   }
 
   async resolveExtraQuote(quoteId, action) {
-    return await this.request(`/bookings/extra-quotes/${quoteId}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ action })
-    });
+    try {
+      return await this.request(`/bookings/extra-quotes/${quoteId}`, {
+        method: 'POST',
+        body: JSON.stringify({ action })
+      });
+    } catch (err) {
+      return await this.request(`/bookings/extra-quotes/${quoteId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ action })
+      });
+    }
   }
 
   // Provider Wallet & Earnings

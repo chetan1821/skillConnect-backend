@@ -289,3 +289,4 @@ export default function PaymentModal({ booking, onClose, onSuccess }) {
     </div>
   );
 }
+

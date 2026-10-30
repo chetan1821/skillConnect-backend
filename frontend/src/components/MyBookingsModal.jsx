@@ -67,6 +67,7 @@ export const MyBookingsModal = ({ isOpen, onClose }) => {
       await api.cancelBooking(bookingId);
       showToast('Booking cancelled and escrow refunded', 'info');
       fetchBookings();
+      window.dispatchEvent(new CustomEvent('notification-updated'));
     } catch (err) {
       showToast(err.message || 'Failed to cancel booking', 'error');
     } finally {
@@ -83,6 +84,7 @@ export const MyBookingsModal = ({ isOpen, onClose }) => {
         action === 'APPROVE' ? 'success' : 'info'
       );
       fetchBookings();
+      window.dispatchEvent(new CustomEvent('notification-updated'));
     } catch (err) {
       showToast(err.message || 'Failed to resolve quote', 'error');
     } finally {
@@ -166,7 +168,7 @@ export const MyBookingsModal = ({ isOpen, onClose }) => {
             </div>
           ) : (
             bookings.map((b) => {
-              const pendingQuotes = b.extra_quotes?.filter((q) => q.status === 'PENDING') || [];
+              const pendingQuotes = b.extra_quotes?.filter((q) => (q.status || '').toUpperCase() === 'PENDING') || [];
               const isActive = ['Pending', 'Accepted', 'In Progress', 'Started'].includes(b.status);
               const isCompleted = b.status === 'Completed';
               const isCancelled = b.status === 'Cancelled' || b.status === 'Declined';

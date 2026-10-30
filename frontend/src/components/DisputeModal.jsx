@@ -143,3 +143,4 @@ export default function DisputeModal({ booking, onClose, onSuccess }) {
     </div>
   );
 }
+

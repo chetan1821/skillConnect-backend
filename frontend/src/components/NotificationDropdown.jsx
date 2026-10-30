@@ -18,14 +18,20 @@ export default function NotificationDropdown() {
       const data = await api.getNotifications(25);
       setNotifications(data || []);
     } catch (err) {
-      // silent background fail
+      console.warn('Notification poll issue:', err.message);
     }
   };
 
   useEffect(() => {
     loadNotifications();
-    const interval = setInterval(loadNotifications, 15000);
-    return () => clearInterval(interval);
+    const interval = setInterval(loadNotifications, 4000); // 4 second polling
+    const handleNotificationUpdated = () => loadNotifications();
+    window.addEventListener('notification-updated', handleNotificationUpdated);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('notification-updated', handleNotificationUpdated);
+    };
   }, [user]);
 
   // Close on outside click
@@ -40,7 +46,7 @@ export default function NotificationDropdown() {
   }, []);
 
   const handleMarkAsRead = async (id, e) => {
-    e.stopPropagation();
+    if (e) e.stopPropagation();
     try {
       await api.markNotificationRead(id);
       setNotifications((prev) =>
@@ -58,6 +64,15 @@ export default function NotificationDropdown() {
     } catch (err) {
       console.error(err);
     }
+  };
+
+  const handleNotificationClick = async (n) => {
+    if (!n.is_read) {
+      handleMarkAsRead(n.id);
+    }
+    setIsOpen(false);
+    // Dispatch to open appointments drawer
+    window.dispatchEvent(new CustomEvent('open-appointments', { detail: { bookingId: n.link_id } }));
   };
 
   if (!user) return null;
@@ -96,7 +111,7 @@ export default function NotificationDropdown() {
 
       {/* Popover */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="absolute right-[-10px] sm:right-0 mt-2 w-[calc(100vw-24px)] sm:w-96 max-w-sm bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
           {/* Header */}
           <div className="flex items-center justify-between p-3.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/70">
             <div className="flex items-center gap-2">
@@ -125,13 +140,13 @@ export default function NotificationDropdown() {
               <div className="p-8 text-center text-slate-400 dark:text-slate-500">
                 <Bell className="w-8 h-8 mx-auto mb-2 opacity-40" />
                 <p className="text-xs font-semibold">No notifications yet</p>
-                <p className="text-[11px] mt-0.5">Booking alerts, OTPs, and updates will show here.</p>
+                <p className="text-[11px] mt-0.5">Booking alerts, OTPs, quotes, and messages will show here.</p>
               </div>
             ) : (
               notifications.map((n) => (
                 <div
                   key={n.id}
-                  onClick={(e) => !n.is_read && handleMarkAsRead(n.id, e)}
+                  onClick={() => handleNotificationClick(n)}
                   className={`p-3.5 flex items-start gap-3 transition-colors cursor-pointer ${
                     !n.is_read
                       ? 'bg-indigo-50/40 dark:bg-indigo-950/20 hover:bg-indigo-50/70 dark:hover:bg-indigo-950/40'

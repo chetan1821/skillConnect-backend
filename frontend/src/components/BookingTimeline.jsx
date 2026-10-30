@@ -4,8 +4,7 @@ import { Check, Clock, Play, Wrench, ShieldCheck, AlertTriangle, Key } from 'luc
 const STEPS = [
   { key: 'PENDING', label: 'Booked', desc: 'Awaiting confirmation' },
   { key: 'ACCEPTED', label: 'Accepted', desc: 'Specialist assigned' },
-  { key: 'STARTED', label: 'Started', desc: 'Doorstep OTP verified' },
-  { key: 'IN_PROGRESS', label: 'In Progress', desc: 'Work underway' },
+  { key: 'IN_PROGRESS', label: 'In Progress', desc: 'Doorstep OTP verified' },
   { key: 'COMPLETED', label: 'Completed', desc: 'Escrow released' },
 ];
 
@@ -13,8 +12,9 @@ const STATUS_ORDER = {
   PENDING: 1,
   ACCEPTED: 2,
   STARTED: 3,
-  IN_PROGRESS: 4,
-  COMPLETED: 5,
+  IN_PROGRESS: 3,
+  'IN PROGRESS': 3,
+  COMPLETED: 4,
   CANCELLED: -1,
   DECLINED: -1,
 };
@@ -22,8 +22,9 @@ const STATUS_ORDER = {
 export default function BookingTimeline({ booking }) {
   if (!booking) return null;
 
-  const currentStatus = (booking.status || 'PENDING').toUpperCase();
-  const currentStep = STATUS_ORDER[currentStatus] || 1;
+  const rawStatus = (booking.status || 'PENDING').toUpperCase();
+  const currentStatus = rawStatus.replace(/[\s_-]+/g, '_');
+  const currentStep = STATUS_ORDER[currentStatus] || STATUS_ORDER[rawStatus] || 1;
   const isCancelled = currentStatus === 'CANCELLED' || currentStatus === 'DECLINED';
   const hasDispute = booking.dispute_status && booking.dispute_status !== 'NONE';
 
@@ -32,7 +33,7 @@ export default function BookingTimeline({ booking }) {
       <div className="my-3 p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 flex items-center justify-between text-xs">
         <div className="flex items-center gap-2 text-red-700 dark:text-red-400 font-semibold">
           <AlertTriangle className="w-4 h-4" />
-          <span>Booking {currentStatus}</span>
+          <span>Booking {booking.status}</span>
         </div>
         {booking.cancellation_reason && (
           <span className="text-red-600 dark:text-red-400/80 italic">{booking.cancellation_reason}</span>
