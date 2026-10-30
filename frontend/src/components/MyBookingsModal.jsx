@@ -20,7 +20,8 @@ import {
   CreditCard,
   FileText,
   Star,
-  AlertTriangle
+  AlertTriangle,
+  Receipt
 } from 'lucide-react';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
@@ -43,21 +44,34 @@ export const MyBookingsModal = ({ isOpen, onClose }) => {
   const [reviewBooking, setReviewBooking] = useState(null);
   const [disputeBooking, setDisputeBooking] = useState(null);
 
-  const fetchBookings = async () => {
-    setIsLoading(true);
+  const fetchBookings = async (silent = false) => {
+    if (!silent) setIsLoading(true);
     try {
       const data = await api.getMyBookings();
       setBookings(data || []);
     } catch (err) {
-      showToast(err.message || 'Failed to fetch bookings', 'error');
+      if (!silent) showToast(err.message || 'Failed to fetch bookings', 'error');
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
   };
 
   useEffect(() => {
     if (isOpen) {
-      fetchBookings();
+      fetchBookings(false);
+
+      // Auto-poll every 3 seconds so client sees live status changes in real-time!
+      const interval = setInterval(() => {
+        fetchBookings(true);
+      }, 3000);
+
+      const handleUpdate = () => fetchBookings(true);
+      window.addEventListener('notification-updated', handleUpdate);
+
+      return () => {
+        clearInterval(interval);
+        window.removeEventListener('notification-updated', handleUpdate);
+      };
     }
   }, [isOpen]);
 
@@ -66,7 +80,7 @@ export const MyBookingsModal = ({ isOpen, onClose }) => {
     try {
       await api.cancelBooking(bookingId);
       showToast('Booking cancelled and escrow refunded', 'info');
-      fetchBookings();
+      fetchBookings(false);
       window.dispatchEvent(new CustomEvent('notification-updated'));
     } catch (err) {
       showToast(err.message || 'Failed to cancel booking', 'error');
@@ -83,7 +97,7 @@ export const MyBookingsModal = ({ isOpen, onClose }) => {
         action === 'APPROVE' ? 'Extra quote approved and invoice updated!' : 'Extra quote rejected',
         action === 'APPROVE' ? 'success' : 'info'
       );
-      fetchBookings();
+      fetchBookings(true);
       window.dispatchEvent(new CustomEvent('notification-updated'));
     } catch (err) {
       showToast(err.message || 'Failed to resolve quote', 'error');
@@ -118,22 +132,28 @@ export const MyBookingsModal = ({ isOpen, onClose }) => {
         {/* Header */}
         <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-850 flex-shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shadow-sm">
               <Calendar className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
-                My Service Appointments
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
+                  My Service Appointments
+                </h2>
+                <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-900/60">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Live Sync
+                </span>
+              </div>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Track status timeline, chat with specialist, manage escrow and download tax invoices
+                Track status, share verification OTPs, approve extra quotes, and download tax invoices
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
             <button
-              onClick={fetchBookings}
+              onClick={() => fetchBookings(false)}
               disabled={isLoading}
               className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               title="Refresh Appointments"
@@ -236,6 +256,87 @@ export const MyBookingsModal = ({ isOpen, onClose }) => {
                   {/* Feature 4: Live Order Progress Stepper */}
                   <BookingTimeline booking={b} />
 
+                  {/* PROMINENT PERMANENT OTP DISPLAY CARDS (Held on Client Screen) */}
+                  {isActive && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200/90 dark:border-slate-700/80">
+                      {/* Start OTP Card */}
+                      <div className={`p-3 rounded-xl border text-center transition-all ${
+                        b.status === 'Pending' || b.status === 'Accepted'
+                          ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800 shadow-sm'
+                          : 'bg-slate-100 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 opacity-70'
+                      }`}>
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-800 dark:text-amber-300 flex items-center justify-center gap-1.5">
+                          <Key className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                          <span>Step 1: Start OTP</span>
+                        </span>
+                        <div className="text-2xl font-mono font-black text-amber-950 dark:text-amber-100 tracking-widest my-1">
+                          {b.start_otp || '----'}
+                        </div>
+                        <span className="text-[10px] font-semibold text-amber-800 dark:text-amber-300 block">
+                          {b.status === 'Pending' || b.status === 'Accepted'
+                            ? '👉 Share with specialist upon arrival'
+                            : '✓ Doorstep Arrival Verified'}
+                        </span>
+                      </div>
+
+                      {/* Completion OTP Card - PERMANENTLY HELD ON SCREEN */}
+                      <div className="p-3 rounded-xl border text-center transition-all bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 shadow-sm ring-1 ring-emerald-400/40">
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 dark:text-emerald-300 flex items-center justify-center gap-1.5">
+                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                          <span>Step 2: Completion OTP</span>
+                        </span>
+                        <div className="text-2xl font-mono font-black text-emerald-950 dark:text-emerald-100 tracking-widest my-1">
+                          {b.completion_otp || '----'}
+                        </div>
+                        <span className="text-[10px] font-bold text-emerald-800 dark:text-emerald-300 block">
+                          ⚠️ Hold this code! Share ONLY when work is done.
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* COMPLETED BANNER & INSTANT TAX INVOICE GENERATOR */}
+                  {isCompleted && (
+                    <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-transparent border border-emerald-300 dark:border-emerald-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-md shadow-emerald-500/30 flex-shrink-0">
+                          <CheckCircle2 className="w-6 h-6 stroke-[2.5]" />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
+                            <span>Service Certified Complete</span>
+                            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">• Escrow Released</span>
+                          </h4>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                            Completion OTP verified. Official tax invoice bill generated.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenInvoice(b.id)}
+                          className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-500/25 flex items-center gap-1.5 transition-all active:scale-95"
+                        >
+                          <FileText className="w-4 h-4" />
+                          <span>View & Print Tax Invoice</span>
+                        </button>
+
+                        {!b.review && (
+                          <button
+                            type="button"
+                            onClick={() => setReviewBooking(b)}
+                            className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-md shadow-amber-500/20 flex items-center gap-1.5 transition-all active:scale-95"
+                          >
+                            <Star className="w-3.5 h-3.5 fill-white" />
+                            <span>Rate Pro</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Pending Extra Quotes Workflow */}
                   {pendingQuotes.length > 0 && (
                     <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 space-y-2.5">
@@ -247,7 +348,7 @@ export const MyBookingsModal = ({ isOpen, onClose }) => {
                         <div key={q.id} className="p-3 bg-white dark:bg-slate-900 rounded-lg border border-amber-200/80 dark:border-amber-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                           <div className="text-xs">
                             <p className="font-bold text-slate-900 dark:text-white">Amount: ₹{q.amount}</p>
-                            <p className="text-slate-600 dark:text-slate-400 text-[11px]">{q.description}</p>
+                            <p className="text-slate-600 dark:text-slate-400 text-[11px]">{q.description || q.title}</p>
                           </div>
                           <div className="flex items-center gap-2">
                             <button
@@ -256,7 +357,7 @@ export const MyBookingsModal = ({ isOpen, onClose }) => {
                               className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1 shadow-sm active:scale-95"
                             >
                               <Check className="w-3.5 h-3.5" />
-                              <span>Approve</span>
+                              <span>Approve (+₹{q.amount})</span>
                             </button>
                             <button
                               onClick={() => handleResolveQuote(q.id, 'REJECT')}
@@ -272,7 +373,7 @@ export const MyBookingsModal = ({ isOpen, onClose }) => {
                     </div>
                   )}
 
-                  {/* 6 Feature Action Bar */}
+                  {/* Action Bar */}
                   <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 flex-wrap">
                     <div className="flex items-center gap-2 flex-wrap">
                       {/* Feature 3: In-App Chat Specialist */}
@@ -300,15 +401,15 @@ export const MyBookingsModal = ({ isOpen, onClose }) => {
                       )}
 
                       {/* Feature 2: View / Print Tax Invoice */}
-                      {b.payment_status !== 'UNPAID' && (
+                      {(isCompleted || b.payment_status !== 'UNPAID') && (
                         <button
                           type="button"
                           onClick={() => handleOpenInvoice(b.id)}
                           className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95"
-                          title="Download & Print Tax Invoice"
+                          title="Download & Print Tax Invoice Bill"
                         >
-                          <FileText className="w-3.5 h-3.5 text-indigo-500" />
-                          <span>Tax Invoice</span>
+                          <Receipt className="w-3.5 h-3.5 text-indigo-500" />
+                          <span>Tax Invoice Bill</span>
                         </button>
                       )}
 
@@ -320,7 +421,7 @@ export const MyBookingsModal = ({ isOpen, onClose }) => {
                           className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm shadow-amber-500/20 active:scale-95"
                         >
                           <Star className="w-3.5 h-3.5 fill-white" />
-                          <span>Rate Specialist</span>
+                          <span>Rate Pro</span>
                         </button>
                       )}
 
@@ -367,7 +468,7 @@ export const MyBookingsModal = ({ isOpen, onClose }) => {
         <PaymentModal
           booking={paymentBooking}
           onClose={() => setPaymentBooking(null)}
-          onSuccess={fetchBookings}
+          onSuccess={() => fetchBookings(false)}
         />
       )}
 
@@ -375,7 +476,7 @@ export const MyBookingsModal = ({ isOpen, onClose }) => {
         <ReviewModal
           booking={reviewBooking}
           onClose={() => setReviewBooking(null)}
-          onSuccess={fetchBookings}
+          onSuccess={() => fetchBookings(false)}
         />
       )}
 
@@ -383,7 +484,7 @@ export const MyBookingsModal = ({ isOpen, onClose }) => {
         <DisputeModal
           booking={disputeBooking}
           onClose={() => setDisputeBooking(null)}
-          onSuccess={fetchBookings}
+          onSuccess={() => fetchBookings(false)}
         />
       )}
     </div>

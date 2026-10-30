@@ -52,8 +52,8 @@ export const ProviderPortal = ({ onSwitchToCustomer }) => {
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [bankAccountNote, setBankAccountNote] = useState('HDFC Bank A/C ending in 4821');
 
-  const loadPortalData = async () => {
-    setIsLoading(true);
+  const loadPortalData = async (silent = false) => {
+    if (!silent) setIsLoading(true);
     try {
       const [bookingsData, walletData] = await Promise.all([
         api.getProviderBookings().catch(() => []),
@@ -62,14 +62,26 @@ export const ProviderPortal = ({ onSwitchToCustomer }) => {
       setBookings(bookingsData || []);
       if (walletData) setWallet(walletData);
     } catch (err) {
-      showToast(err.message || 'Failed to load specialist portal data', 'error');
+      if (!silent) showToast(err.message || 'Failed to load specialist portal data', 'error');
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    loadPortalData();
+    loadPortalData(false);
+    // Auto-poll every 3.5s so provider sees customer quote approvals and new bookings in real time!
+    const interval = setInterval(() => {
+      loadPortalData(true);
+    }, 3500);
+
+    const handleUpdate = () => loadPortalData(true);
+    window.addEventListener('notification-updated', handleUpdate);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('notification-updated', handleUpdate);
+    };
   }, []);
 
   const handleAcceptJob = async (bookingId) => {
