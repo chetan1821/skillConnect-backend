@@ -43,7 +43,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_origin_regex=r"https://skill-connect-backend(?:-[a-z0-9]+)*-cp7292637-gmailcoms-projects\.vercel\.app",
+    allow_origin_regex=r"https://.*\.vercel\.app",
 
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],

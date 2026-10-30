@@ -20,12 +20,15 @@ elif (current_dir / "skillConnect-backend" / "app").exists():
     sys.path.insert(0, str(current_dir / "skillConnect-backend"))
 
 from app.database.database import SessionLocal
+from app.config.settings import settings
 from app.models.user import User
 from app.models.enums import UserRole
 from app.auth.password import hash_password
 
 
 def create_or_promote_admin(full_name: str, email: str, phone: str, password: str):
+    db_host = settings.DATABASE_URL.split("@")[-1].split("?")[0] if "@" in settings.DATABASE_URL else settings.DATABASE_URL
+    print(f"\n[INFO] Connected to Database: {db_host}")
     db = SessionLocal()
     email_clean = email.strip().lower()
     phone_clean = phone.strip()
@@ -78,8 +81,8 @@ def create_or_promote_admin(full_name: str, email: str, phone: str, password: st
             print(f"  Phone:    {new_admin.phone_number}")
             print(f"  Role:     {new_admin.role}")
             print("========================================================")
-            print("You can now open http://localhost:5173 on your browser,")
-            print("click 'Sign In' and log in with this email and password.")
+            print("You can now open your frontend, click 'Sign In',")
+            print("and log in with this email and password.")
 
     except Exception as e:
         db.rollback()

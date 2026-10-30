@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:8000';
+const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8000').replace(/\/+$/, '');
 
 class ApiClient {
   constructor() {
@@ -19,7 +19,7 @@ class ApiClient {
       const res = await fetch(`${BASE_URL}/`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
-        signal: AbortSignal.timeout(3000)
+        signal: AbortSignal.timeout(12000)
       });
       return res.ok;
     } catch {
@@ -38,7 +38,7 @@ class ApiClient {
       const response = await fetch(`${BASE_URL}${endpoint}`, {
         ...options,
         headers,
-        signal: AbortSignal.timeout(8000)
+        signal: options.signal || AbortSignal.timeout(30000)
       });
 
       if (response.status === 401) {
