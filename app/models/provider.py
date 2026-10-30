@@ -1,6 +1,7 @@
 from sqlalchemy import (
     Column,
     Integer,
+    Numeric,
     String,
     Boolean,
     DateTime,
@@ -40,6 +41,18 @@ class Provider(Base):
     experience_years = Column(
         Integer,
         default=0,
+        nullable=False
+    )
+
+    visiting_fee = Column(
+        Numeric(10, 2),
+        default=199.00,
+        nullable=False
+    )
+
+    hourly_rate = Column(
+        Numeric(10, 2),
+        default=300.00,
         nullable=False
     )
 

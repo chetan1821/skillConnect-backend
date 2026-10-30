@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { api } from '../api/client';
-import { INITIAL_USERS } from '../data/mockData';
 
 const AuthContext = createContext(null);
 
@@ -15,8 +14,6 @@ export const AuthProvider = ({ children }) => {
   });
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalTab, setAuthModalTab] = useState('login'); // 'login' | 'register'
-  const [backendOnline, setBackendOnline] = useState(false);
-  const [isDemoMode, setIsDemoMode] = useState(() => api.useMock);
   const [toast, setToast] = useState(null);
 
   const showToast = (message, type = 'info') => {
@@ -24,30 +21,6 @@ export const AuthProvider = ({ children }) => {
     setTimeout(() => {
       setToast(null);
     }, 4000);
-  };
-
-  // Check backend health periodically
-  useEffect(() => {
-    const checkStatus = async () => {
-      const isUp = await api.checkBackendHealth();
-      setBackendOnline(isUp);
-      if (isUp && isDemoMode) {
-        // Backend detected
-      }
-    };
-
-    checkStatus();
-    const interval = setInterval(checkStatus, 15000);
-    return () => clearInterval(interval);
-  }, [isDemoMode]);
-
-  const toggleDemoMode = (enabled) => {
-    setIsDemoMode(enabled);
-    api.setMockMode(enabled);
-    showToast(
-      enabled ? "Switched to Demo / Mock Mode" : "Switched to Live FastAPI Backend mode",
-      "info"
-    );
   };
 
   const setViewMode = (mode) => {
@@ -82,7 +55,7 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       const res = await api.register(userData);
-      showToast('Registration successful! Please login.', 'success');
+      showToast('Registration successful! Please sign in with your credentials.', 'success');
       setAuthModalTab('login');
       return res;
     } catch (err) {
@@ -100,24 +73,6 @@ export const AuthProvider = ({ children }) => {
     showToast('Signed out successfully', 'info');
   };
 
-  const quickLoginAs = async (role) => {
-    const target = INITIAL_USERS.find(u => u.role.toLowerCase() === role.toLowerCase());
-    if (target) {
-      setUser(target);
-      const mockToken = `quick-${target.id}-${Date.now()}`;
-      setToken(mockToken);
-      api.setToken(mockToken);
-      localStorage.setItem('skillconnect_user', JSON.stringify(target));
-
-      if (role.toLowerCase() === 'admin') setViewMode('admin');
-      else if (role.toLowerCase() === 'provider') setViewMode('provider');
-      else setViewMode('customer');
-
-      setIsAuthModalOpen(false);
-      showToast(`Switched to demo account: ${target.full_name} (${target.role})`, 'success');
-    }
-  };
-
   return (
     <AuthContext.Provider
       value={{
@@ -129,15 +84,11 @@ export const AuthProvider = ({ children }) => {
         setIsAuthModalOpen,
         authModalTab,
         setAuthModalTab,
-        backendOnline,
-        isDemoMode,
-        toggleDemoMode,
         toast,
         showToast,
         login,
         register,
-        logout,
-        quickLoginAs
+        logout
       }}
     >
       {children}
@@ -152,4 +103,3 @@ export const useAuth = () => {
   }
   return context;
 };
-

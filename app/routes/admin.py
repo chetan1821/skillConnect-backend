@@ -1,3 +1,4 @@
+from app.schemas.booking import BookingStatusUpdate
 from fastapi import APIRouter, Depends,Query
 from sqlalchemy.orm import Session
 
@@ -13,6 +14,7 @@ from app.schemas.category import (
     CategoryResponse,
 )
 from app.schemas.provider import (
+    ProviderRegister,
     ProviderCreate,
     ProviderUpdate,
     ProviderResponse,
@@ -25,6 +27,11 @@ from app.schemas.admin import (
     AdminDashboardResponse,
     AdminUserListResponse,
     AdminUserResponse,
+    AdminUserProfileResponse,
+    AdminAnalyticsResponse,
+    AuditLogResponse,
+    AnnouncementRequest,
+    AnnouncementResponse,
     UserStatusUpdate
 )
 
@@ -32,6 +39,14 @@ from app.services.admin_service import (
     get_dashboard_stats,
     get_users,
     get_user_by_id,
+    get_user_profile_by_id,
+    get_all_admin_bookings,
+    admin_update_booking_status,
+    get_admin_analytics,
+    get_admin_audit_logs,
+    get_system_announcement,
+    set_system_announcement,
+    get_provider_categories_detail,
     update_user_status,
     create_category,
     get_categories,
@@ -39,6 +54,7 @@ from app.services.admin_service import (
     update_category,
     delete_category,
     create_provider,
+    create_provider_with_user,
     get_providers,
     get_provider_by_id,
     update_provider,
@@ -89,14 +105,14 @@ def list_users(
 
 @router.get(
     "/users/{user_id}",
-    response_model=AdminUserResponse
+    response_model=AdminUserProfileResponse
 )
 def get_user(
     user_id: int,
     current_admin: User = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ):
-    return get_user_by_id(
+    return get_user_profile_by_id(
         db=db,
         user_id=user_id
     )
@@ -193,6 +209,22 @@ def delete_category_endpoint(
     return delete_category(
         db=db,
         category_id=category_id
+    )
+
+
+@router.post(
+    "/providers/onboard",
+    response_model=ProviderResponse,
+    status_code=201
+)
+def onboard_provider(
+    provider_data: ProviderRegister,
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    return create_provider_with_user(
+        db=db,
+        provider_data=provider_data
     )
 
 
@@ -323,3 +355,82 @@ def remove_provider_category(
         provider_id=provider_id,
         category_id=category_id
     )
+
+# -------------------------------------------------------------
+# New Admin Features: Bookings, Analytics, Audit, Announcements
+# -------------------------------------------------------------
+
+@router.get("/bookings")
+def list_admin_bookings(
+    status: str | None = None,
+    search: str | None = None,
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    return get_all_admin_bookings(db=db, status_filter=status, search=search)
+
+
+@router.patch("/bookings/{booking_id}/status")
+def update_admin_booking_status(
+    booking_id: int,
+    status_data: BookingStatusUpdate,
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    # status_data has status string
+    new_status = status_data.status
+    return admin_update_booking_status(
+        db=db,
+        booking_id=booking_id,
+        new_status=new_status,
+        admin_email=current_admin.email
+    )
+
+
+@router.get("/analytics", response_model=AdminAnalyticsResponse)
+def get_analytics(
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    return get_admin_analytics(db=db)
+
+
+@router.get("/audit-logs", response_model=list[AuditLogResponse])
+def get_audit_logs(
+    limit: int = 50,
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    return get_admin_audit_logs(db=db, limit=limit)
+
+
+@router.get("/announcement", response_model=AnnouncementResponse)
+def get_announcement(
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    return get_system_announcement(db=db)
+
+
+@router.post("/announcement", response_model=AnnouncementResponse)
+def update_announcement(
+    ann_data: AnnouncementRequest,
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    return set_system_announcement(
+        db=db,
+        message=ann_data.message,
+        banner_type=ann_data.banner_type,
+        is_active=ann_data.is_active,
+        admin_email=current_admin.email
+    )
+
+
+@router.get("/providers/{provider_id}/categories/manage")
+def get_provider_categories_management(
+    provider_id: int,
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    return get_provider_categories_detail(db=db, provider_id=provider_id)

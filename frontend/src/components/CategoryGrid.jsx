@@ -25,7 +25,7 @@ const ICON_MAP = {
 };
 
 export const CategoryGrid = ({
-  categories,
+  categories = [],
   selectedCategory,
   onSelectCategory
 }) => {
@@ -35,13 +35,13 @@ export const CategoryGrid = ({
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12">
           <div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold uppercase tracking-wider mb-2">
-              Explore Our Expertise
+              Browse Categories
             </div>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-              Popular Service Categories
+              Service Categories & Trades
             </h2>
             <p className="mt-2 text-base text-slate-600 max-w-2xl">
-              Select a specialized domain to view certified providers ready to assist you today.
+              Select a specialized domain to view verified specialists available on the platform.
             </p>
           </div>
 
@@ -57,77 +57,86 @@ export const CategoryGrid = ({
         </div>
 
         {/* Categories Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-          {categories.map((cat) => {
-            const IconComponent = ICON_MAP[cat.icon] || Tag;
-            const isSelected = selectedCategory === cat.name;
+        {categories.length === 0 ? (
+          <div className="p-12 text-center bg-slate-50 rounded-3xl border border-slate-200">
+            <Tag className="w-10 h-10 text-slate-400 mx-auto mb-2" />
+            <p className="text-sm font-bold text-slate-700">No categories added yet</p>
+            <p className="text-xs text-slate-500 mt-1">Categories created by administrators will appear here.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+            {categories.map((cat) => {
+              const IconComponent = ICON_MAP[cat.icon] || Tag;
+              const isSelected = selectedCategory === cat.name;
 
-            return (
-              <div
-                key={cat.id}
-                onClick={() => onSelectCategory(isSelected ? '' : cat.name)}
-                className={`group cursor-pointer rounded-2xl p-6 border transition-all duration-200 relative overflow-hidden flex flex-col justify-between ${
-                  isSelected
-                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-xl shadow-indigo-500/25 scale-[1.02]'
-                    : 'bg-white hover:bg-slate-50/80 border-slate-200/90 hover:border-indigo-300 hover:shadow-lg hover:shadow-slate-200/50'
-                }`}
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <div
-                      className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${
-                        isSelected
-                          ? 'bg-white/20 text-white'
-                          : 'bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white'
-                      }`}
-                    >
-                      <IconComponent className="w-6 h-6" />
+              return (
+                <div
+                  key={cat.id}
+                  onClick={() => onSelectCategory(isSelected ? '' : cat.name)}
+                  className={`group cursor-pointer rounded-2xl p-6 border transition-all duration-200 relative overflow-hidden flex flex-col justify-between ${
+                    isSelected
+                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-xl shadow-indigo-500/25 scale-[1.02]'
+                      : 'bg-white hover:bg-slate-50/80 border-slate-200/90 hover:border-indigo-300 hover:shadow-lg hover:shadow-slate-200/50'
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div
+                        className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${
+                          isSelected
+                            ? 'bg-white/20 text-white'
+                            : 'bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white'
+                        }`}
+                      >
+                        <IconComponent className="w-6 h-6" />
+                      </div>
+
+                      <span
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          isSelected
+                            ? 'bg-white/25 text-white'
+                            : 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                        }`}
+                      >
+                        Active Trade
+                      </span>
                     </div>
 
-                    <span
-                      className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${
-                        isSelected
-                          ? 'bg-white/25 text-white'
-                          : 'bg-slate-100 text-slate-600'
+                    <h3
+                      className={`text-lg font-bold tracking-tight mb-2 ${
+                        isSelected ? 'text-white' : 'text-slate-900 group-hover:text-indigo-600'
                       }`}
                     >
-                      {cat.provider_count || 12}+ Pros
-                    </span>
+                      {cat.name}
+                    </h3>
+
+                    {cat.description && (
+                      <p
+                        className={`text-xs line-clamp-2 leading-relaxed ${
+                          isSelected ? 'text-indigo-100' : 'text-slate-500'
+                        }`}
+                      >
+                        {cat.description}
+                      </p>
+                    )}
                   </div>
 
-                  <h3
-                    className={`text-lg font-bold tracking-tight mb-2 ${
-                      isSelected ? 'text-white' : 'text-slate-900 group-hover:text-indigo-600'
-                    }`}
-                  >
-                    {cat.name}
-                  </h3>
-
-                  <p
-                    className={`text-xs line-clamp-2 leading-relaxed ${
-                      isSelected ? 'text-indigo-100' : 'text-slate-500'
-                    }`}
-                  >
-                    {cat.description}
-                  </p>
+                  <div className="mt-5 pt-3 border-t border-current/10 flex items-center justify-between text-xs font-semibold">
+                    <span className={isSelected ? 'text-white' : 'text-indigo-600'}>
+                      {isSelected ? 'Currently Selected' : 'View Providers'}
+                    </span>
+                    <ArrowRight
+                      className={`w-4 h-4 transition-transform group-hover:translate-x-1 ${
+                        isSelected ? 'text-white' : 'text-indigo-600'
+                      }`}
+                    />
+                  </div>
                 </div>
-
-                <div className="mt-5 pt-3 border-t border-current/10 flex items-center justify-between text-xs font-semibold">
-                  <span className={isSelected ? 'text-white' : 'text-indigo-600'}>
-                    {isSelected ? 'Currently Selected' : 'View Providers'}
-                  </span>
-                  <ArrowRight
-                    className={`w-4 h-4 transition-transform group-hover:translate-x-1 ${
-                      isSelected ? 'text-white' : 'text-indigo-600'
-                    }`}
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </section>
   );
 };
-

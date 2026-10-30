@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { X, Lock, Mail, User, Phone, Sparkles, ArrowRight, Shield } from 'lucide-react';
+import { X, Lock, Mail, User, Phone, ArrowRight } from 'lucide-react';
 
 export const AuthModal = ({ isOpen, onClose, initialTab = 'login' }) => {
-  const { login, register, authModalTab, setAuthModalTab, quickLoginAs } = useAuth();
+  const { login, register } = useAuth();
   const [tab, setTab] = useState(initialTab);
 
   // Form states
@@ -24,7 +24,7 @@ export const AuthModal = ({ isOpen, onClose, initialTab = 'login' }) => {
       await login(email, password);
       onClose();
     } catch (err) {
-      setErrorMsg(err.message || 'Login failed');
+      setErrorMsg(err.message || 'Login failed. Please verify your credentials.');
     } finally {
       setIsLoading(false);
     }
@@ -46,19 +46,6 @@ export const AuthModal = ({ isOpen, onClose, initialTab = 'login' }) => {
       setErrorMsg(err.message || 'Registration failed');
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const fillCredentials = (type) => {
-    if (type === 'admin') {
-      setEmail('admin@skillconnect.com');
-      setPassword('Admin@123');
-    } else if (type === 'provider') {
-      setEmail('vikram@apexelectrical.com');
-      setPassword('Provider@123');
-    } else {
-      setEmail('kavita.rao@gmail.com');
-      setPassword('Customer@123');
     }
   };
 
@@ -86,7 +73,7 @@ export const AuthModal = ({ isOpen, onClose, initialTab = 'login' }) => {
                 : 'border-transparent text-slate-400 hover:text-slate-700'
             }`}
           >
-            Sign In to SkillConnect
+            Sign In
           </button>
           <button
             onClick={() => {
@@ -99,7 +86,7 @@ export const AuthModal = ({ isOpen, onClose, initialTab = 'login' }) => {
                 : 'border-transparent text-slate-400 hover:text-slate-700'
             }`}
           >
-            Create New Account
+            Create Account
           </button>
         </div>
 
@@ -121,7 +108,7 @@ export const AuthModal = ({ isOpen, onClose, initialTab = 'login' }) => {
                   <input
                     type="email"
                     required
-                    placeholder="e.g. admin@skillconnect.com"
+                    placeholder="Enter your email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
@@ -136,7 +123,7 @@ export const AuthModal = ({ isOpen, onClose, initialTab = 'login' }) => {
                   <input
                     type="password"
                     required
-                    placeholder="••••••••"
+                    placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
@@ -149,39 +136,9 @@ export const AuthModal = ({ isOpen, onClose, initialTab = 'login' }) => {
                 disabled={isLoading}
                 className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-md shadow-indigo-600/20 transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
               >
-                <span>{isLoading ? 'Verifying...' : 'Sign In'}</span>
+                <span>{isLoading ? 'Signing In...' : 'Sign In'}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
-
-              {/* Quick Preset Buttons */}
-              <div className="pt-3 border-t border-slate-100">
-                <p className="text-[11px] font-semibold text-slate-400 text-center mb-2">
-                  ⚡ Quick Test Credentials:
-                </p>
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => fillCredentials('admin')}
-                    className="px-2 py-1.5 rounded-lg border border-slate-200 text-[11px] font-medium text-slate-700 hover:bg-indigo-50 hover:border-indigo-300 transition-colors"
-                  >
-                    Admin
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => fillCredentials('provider')}
-                    className="px-2 py-1.5 rounded-lg border border-slate-200 text-[11px] font-medium text-slate-700 hover:bg-indigo-50 hover:border-indigo-300 transition-colors"
-                  >
-                    Provider
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => fillCredentials('customer')}
-                    className="px-2 py-1.5 rounded-lg border border-slate-200 text-[11px] font-medium text-slate-700 hover:bg-indigo-50 hover:border-indigo-300 transition-colors"
-                  >
-                    Customer
-                  </button>
-                </div>
-              </div>
             </form>
           ) : (
             /* Register Form */
@@ -193,7 +150,7 @@ export const AuthModal = ({ isOpen, onClose, initialTab = 'login' }) => {
                   <input
                     type="text"
                     required
-                    placeholder="John Doe"
+                    placeholder="e.g. Rahul Sharma"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
@@ -208,7 +165,7 @@ export const AuthModal = ({ isOpen, onClose, initialTab = 'login' }) => {
                   <input
                     type="email"
                     required
-                    placeholder="john@example.com"
+                    placeholder="name@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
@@ -262,4 +219,3 @@ export const AuthModal = ({ isOpen, onClose, initialTab = 'login' }) => {
     </div>
   );
 };
-

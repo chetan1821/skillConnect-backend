@@ -1,7 +1,7 @@
 import React from 'react';
 import { Zap, Heart, ShieldCheck, Mail, Phone, MapPin } from 'lucide-react';
 
-export const Footer = ({ onSelectCategory }) => {
+export const Footer = ({ onSelectCategory, categories = [] }) => {
   return (
     <footer className="bg-slate-950 text-slate-400 text-sm border-t border-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -26,33 +26,22 @@ export const Footer = ({ onSelectCategory }) => {
           {/* Top Services */}
           <div>
             <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-4">Popular Services</h4>
-            <ul className="space-y-2 text-xs">
-              <li>
-                <button onClick={() => onSelectCategory('Electrical Services')} className="hover:text-white transition-colors">
-                  Electrical Wiring & Repair
-                </button>
-              </li>
-              <li>
-                <button onClick={() => onSelectCategory('Plumbing & Piping')} className="hover:text-white transition-colors">
-                  Plumbing & Leak Fixes
-                </button>
-              </li>
-              <li>
-                <button onClick={() => onSelectCategory('Carpentry & Woodwork')} className="hover:text-white transition-colors">
-                  Carpentry & Modular Furniture
-                </button>
-              </li>
-              <li>
-                <button onClick={() => onSelectCategory('HVAC & AC Service')} className="hover:text-white transition-colors">
-                  Air Conditioner Servicing
-                </button>
-              </li>
-              <li>
-                <button onClick={() => onSelectCategory('Deep Home Cleaning')} className="hover:text-white transition-colors">
-                  Deep Home Sanitation
-                </button>
-              </li>
-            </ul>
+            {categories && categories.length > 0 ? (
+              <ul className="space-y-2 text-xs">
+                {categories.slice(0, 5).map((cat) => (
+                  <li key={cat.id || cat.name}>
+                    <button
+                      onClick={() => onSelectCategory(cat.name)}
+                      className="hover:text-white transition-colors text-left"
+                    >
+                      {cat.name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-xs text-slate-500">Service categories synced from database</p>
+            )}
           </div>
 
           {/* Quick Links */}

@@ -7,9 +7,6 @@ import {
   LogOut,
   ChevronDown,
   Layers,
-  Search,
-  CheckCircle2,
-  Server,
   Zap,
   Menu,
   X,
@@ -21,11 +18,7 @@ export const Navbar = ({ onOpenAuth, onSelectCategory, onOpenMyBookings }) => {
     user,
     logout,
     activeRoleView,
-    setViewMode,
-    backendOnline,
-    isDemoMode,
-    toggleDemoMode,
-    quickLoginAs
+    setViewMode
   } = useAuth();
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -33,81 +26,6 @@ export const Navbar = ({ onOpenAuth, onSelectCategory, onOpenMyBookings }) => {
 
   return (
     <header className="sticky top-0 z-40 w-full bg-white/90 backdrop-blur-md border-b border-slate-200/80 transition-all">
-      {/* Top Bar for System Status & Fast Role Switcher */}
-      <div className="bg-slate-900 text-slate-300 px-4 py-1.5 text-xs flex flex-wrap items-center justify-between gap-2 border-b border-slate-800">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5">
-            <span
-              className={`w-2 h-2 rounded-full ${
-                backendOnline ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'
-              }`}
-            />
-            <span className="font-medium text-slate-200">
-              FastAPI: {backendOnline ? 'Online (localhost:8000)' : 'Not Connected'}
-            </span>
-          </div>
-
-          <span className="text-slate-600">|</span>
-
-          <label className="flex items-center gap-1.5 cursor-pointer text-slate-400 hover:text-white transition-colors">
-            <input
-              type="checkbox"
-              checked={isDemoMode}
-              onChange={(e) => toggleDemoMode(e.target.checked)}
-              className="rounded border-slate-700 bg-slate-800 text-indigo-500 focus:ring-0 focus:ring-offset-0 w-3.5 h-3.5"
-            />
-            <span>Mock Fallback Mode</span>
-          </label>
-        </div>
-
-        {/* Rapid Testing Switcher */}
-        <div className="flex items-center gap-2">
-          <span className="text-slate-400 hidden sm:inline">Simulate Portal:</span>
-          <div className="flex items-center bg-slate-800 rounded-lg p-0.5 border border-slate-700">
-            <button
-              onClick={() => setViewMode('customer')}
-              className={`px-2.5 py-0.5 rounded-md font-medium text-[11px] transition-all ${
-                activeRoleView === 'customer'
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              Consumer
-            </button>
-            <button
-              onClick={() => {
-                setViewMode('admin');
-                if (!user || user.role !== 'Admin') {
-                  quickLoginAs('admin');
-                }
-              }}
-              className={`px-2.5 py-0.5 rounded-md font-medium text-[11px] transition-all ${
-                activeRoleView === 'admin'
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              Admin Suite
-            </button>
-            <button
-              onClick={() => {
-                setViewMode('provider');
-                if (!user || user.role !== 'Provider') {
-                  quickLoginAs('provider');
-                }
-              }}
-              className={`px-2.5 py-0.5 rounded-md font-medium text-[11px] transition-all ${
-                activeRoleView === 'provider'
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              Provider Portal
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* Main Navbar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Brand Logo */}
@@ -142,19 +60,42 @@ export const Navbar = ({ onOpenAuth, onSelectCategory, onOpenMyBookings }) => {
             <a href="#how-it-works" className="hover:text-indigo-600 transition-colors">
               How it Works
             </a>
-            <button
-              onClick={onOpenMyBookings}
-              className="hover:text-indigo-600 transition-colors flex items-center gap-1.5 text-indigo-700 font-semibold"
-            >
-              <Calendar className="w-4 h-4 text-indigo-600" />
-              My Bookings
-            </button>
+            {user && (
+              <button
+                onClick={onOpenMyBookings}
+                className="hover:text-indigo-600 transition-colors flex items-center gap-1.5 text-indigo-700 font-semibold"
+              >
+                <Calendar className="w-4 h-4 text-indigo-600" />
+                My Bookings
+              </button>
+            )}
           </nav>
         )}
 
         {/* Right Actions */}
         <div className="flex items-center gap-3">
-          {user && (
+          {/* Quick Portal Switcher Pills for logged-in staff/customers */}
+          {user && user.role === 'Admin' && (
+            <button
+              onClick={() => setViewMode(activeRoleView === 'admin' ? 'customer' : 'admin')}
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 text-xs font-bold hover:bg-indigo-100 transition-colors"
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>{activeRoleView === 'admin' ? 'Marketplace View' : 'Admin Suite'}</span>
+            </button>
+          )}
+
+          {user && user.role === 'Provider' && (
+            <button
+              onClick={() => setViewMode(activeRoleView === 'provider' ? 'customer' : 'provider')}
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 text-xs font-bold hover:bg-indigo-100 transition-colors"
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>{activeRoleView === 'provider' ? 'Marketplace View' : 'Provider Portal'}</span>
+            </button>
+          )}
+
+          {user && user.role === 'Customer' && (
             <button
               onClick={onOpenMyBookings}
               className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 text-xs font-bold hover:bg-indigo-100 transition-colors"
@@ -202,16 +143,32 @@ export const Navbar = ({ onOpenAuth, onSelectCategory, onOpenMyBookings }) => {
                       <Calendar className="w-3.5 h-3.5 text-slate-400" />
                       My Appointments
                     </button>
-                    <button
-                      onClick={() => {
-                        setViewMode(user.role === 'Admin' ? 'admin' : user.role === 'Provider' ? 'provider' : 'customer');
-                        setIsDropdownOpen(false);
-                      }}
-                      className="w-full text-left px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                    >
-                      <Layers className="w-3.5 h-3.5 text-slate-400" />
-                      Switch to Dashboard
-                    </button>
+
+                    {user.role === 'Admin' && (
+                      <button
+                        onClick={() => {
+                          setViewMode(activeRoleView === 'admin' ? 'customer' : 'admin');
+                          setIsDropdownOpen(false);
+                        }}
+                        className="w-full text-left px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 font-medium"
+                      >
+                        <Layers className="w-3.5 h-3.5 text-indigo-600" />
+                        {activeRoleView === 'admin' ? 'Switch to Marketplace' : 'Admin Operations Suite'}
+                      </button>
+                    )}
+
+                    {user.role === 'Provider' && (
+                      <button
+                        onClick={() => {
+                          setViewMode(activeRoleView === 'provider' ? 'customer' : 'provider');
+                          setIsDropdownOpen(false);
+                        }}
+                        className="w-full text-left px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 font-medium"
+                      >
+                        <Layers className="w-3.5 h-3.5 text-indigo-600" />
+                        {activeRoleView === 'provider' ? 'Switch to Marketplace' : 'Provider Portal'}
+                      </button>
+                    )}
                   </div>
 
                   <div className="border-t border-slate-100 pt-1">
@@ -273,16 +230,42 @@ export const Navbar = ({ onOpenAuth, onSelectCategory, onOpenMyBookings }) => {
           >
             Find Professionals
           </a>
-          <button
-            onClick={() => {
-              setIsMobileMenuOpen(false);
-              onOpenMyBookings();
-            }}
-            className="w-full text-left px-3 py-2 rounded-lg text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 font-medium text-sm flex items-center gap-2"
-          >
-            <Calendar className="w-4 h-4 text-indigo-600" />
-            <span>My Bookings</span>
-          </button>
+          {user && (
+            <button
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                onOpenMyBookings();
+              }}
+              className="w-full text-left px-3 py-2 rounded-lg text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 font-medium text-sm flex items-center gap-2"
+            >
+              <Calendar className="w-4 h-4 text-indigo-600" />
+              <span>My Bookings</span>
+            </button>
+          )}
+          {user && user.role === 'Admin' && (
+            <button
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                setViewMode(activeRoleView === 'admin' ? 'customer' : 'admin');
+              }}
+              className="w-full text-left px-3 py-2 rounded-lg text-indigo-700 bg-indigo-50 font-bold text-sm flex items-center gap-2"
+            >
+              <Layers className="w-4 h-4 text-indigo-600" />
+              <span>{activeRoleView === 'admin' ? 'Marketplace View' : 'Admin Operations Suite'}</span>
+            </button>
+          )}
+          {user && user.role === 'Provider' && (
+            <button
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                setViewMode(activeRoleView === 'provider' ? 'customer' : 'provider');
+              }}
+              className="w-full text-left px-3 py-2 rounded-lg text-indigo-700 bg-indigo-50 font-bold text-sm flex items-center gap-2"
+            >
+              <Layers className="w-4 h-4 text-indigo-600" />
+              <span>{activeRoleView === 'provider' ? 'Marketplace View' : 'Provider Portal'}</span>
+            </button>
+          )}
         </div>
       )}
     </header>
