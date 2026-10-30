@@ -78,42 +78,43 @@ export const MyBookingsModal = ({ isOpen, onClose }) => {
 
   const statusBadge = (status) => {
     const map = {
-      Pending: 'bg-amber-100 text-amber-800 border-amber-200',
-      Accepted: 'bg-sky-100 text-sky-800 border-sky-200',
-      'In Progress': 'bg-indigo-100 text-indigo-800 border-indigo-200',
-      Completed: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-      Cancelled: 'bg-rose-100 text-rose-800 border-rose-200',
-      Declined: 'bg-slate-100 text-slate-700 border-slate-200',
+      Pending: 'bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+      Accepted: 'bg-sky-100 dark:bg-sky-950/70 text-sky-800 dark:text-sky-300 border-sky-200 dark:border-sky-800',
+      'In Progress': 'bg-indigo-100 dark:bg-indigo-950/70 text-indigo-800 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800',
+      Completed: 'bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
+      Cancelled: 'bg-rose-100 dark:bg-rose-950/70 text-rose-800 dark:text-rose-300 border-rose-200 dark:border-rose-800',
+      Declined: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700',
     };
     return map[status] || 'bg-slate-100 text-slate-700 border-slate-200';
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl max-w-3xl w-full overflow-hidden shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-150">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-3xl w-full overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-200 my-auto max-h-[92vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-slate-50/50">
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-850 flex-shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
               <Calendar className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-slate-900 tracking-tight">My Service Appointments</h2>
-              <p className="text-xs text-slate-500">Track and manage your scheduled service calls with Escrow security</p>
+              <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight">My Service Appointments</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Track scheduled calls & 2-stage verification OTPs</p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
             <button
               onClick={fetchBookings}
-              className="p-2 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-500 transition-colors"
+              className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors"
               title="Refresh"
             >
               <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
             </button>
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors"
+              aria-label="Close"
+              className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 flex items-center justify-center transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
@@ -121,14 +122,14 @@ export const MyBookingsModal = ({ isOpen, onClose }) => {
         </div>
 
         {/* Bookings List */}
-        <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
           {bookings.length === 0 ? (
             <div className="text-center py-12">
-              <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center mx-auto mb-3">
-                <Calendar className="w-8 h-8" />
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-500 dark:text-indigo-400 flex items-center justify-center mx-auto mb-3">
+                <Calendar className="w-7 h-7 sm:w-8 sm:h-8" />
               </div>
-              <h3 className="text-base font-bold text-slate-900">No bookings yet</h3>
-              <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">No bookings yet</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
                 Explore our certified providers on the marketplace and book your first home service.
               </p>
             </div>
@@ -141,123 +142,116 @@ export const MyBookingsModal = ({ isOpen, onClose }) => {
               return (
                 <div
                   key={b.id}
-                  className="p-5 rounded-2xl border border-slate-200/90 bg-white hover:border-indigo-300 transition-all shadow-sm space-y-3.5"
+                  className="p-4 sm:p-5 rounded-2xl border border-slate-200/90 dark:border-slate-700/80 bg-white dark:bg-slate-800/80 hover:border-indigo-300 dark:hover:border-indigo-600 transition-all shadow-sm space-y-3.5"
                 >
                   {/* Top Bar */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-700/60 pb-3">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-bold text-slate-900 text-sm">
+                      <span className="font-bold text-slate-900 dark:text-white text-sm">
                         Booking #{b.id}
                       </span>
-                      <span className="text-slate-400">•</span>
-                      <span className="font-semibold text-indigo-700 text-xs">
+                      <span className="text-slate-400 dark:text-slate-500">•</span>
+                      <span className="font-semibold text-indigo-700 dark:text-indigo-400 text-xs">
                         {b.provider_business_name}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span
-                        className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${statusBadge(
+                        className={`px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold border ${statusBadge(
                           b.status
                         )}`}
                       >
                         {b.status}
                       </span>
-                      <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold text-[10px] border border-slate-200">
+                      <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-[10px] border border-slate-200 dark:border-slate-600">
                         {b.payment_status || 'IN_ESCROW'}
                       </span>
-                      <span className="text-xs font-extrabold text-slate-900">
+                      <span className="text-xs font-extrabold text-slate-900 dark:text-white">
                         {b.total_amount || `₹${b.total_amount_numeric}`}
                       </span>
                     </div>
                   </div>
 
                   {/* Core Details Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-600">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs text-slate-600 dark:text-slate-300">
                     <div className="flex items-center gap-2">
-                      <Calendar className="w-3.5 h-3.5 text-indigo-600 flex-shrink-0" />
+                      <Calendar className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
                       <span>{b.scheduled_date} ({b.time_slot})</span>
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <MapPin className="w-3.5 h-3.5 text-indigo-600 flex-shrink-0" />
+                      <MapPin className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
                       <span className="truncate">{b.service_address}</span>
                     </div>
 
-                    {b.provider_phone && (
-                      <div className="flex items-center gap-2">
-                        <Phone className="w-3.5 h-3.5 text-indigo-600 flex-shrink-0" />
-                        <span>Technician: {b.provider_name} ({b.provider_phone})</span>
+                    {b.service_note && (
+                      <div className="sm:col-span-2 text-slate-500 dark:text-slate-400 text-[11px] bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800">
+                        <strong>Note:</strong> {b.service_note}
                       </div>
                     )}
                   </div>
 
-                  {b.service_note && (
-                    <div className="p-2.5 rounded-xl bg-slate-50 text-[11px] text-slate-600 border border-slate-100">
-                      <strong>Issue:</strong> {b.service_note}
-                    </div>
-                  )}
-
-                  {/* Security OTP Verification Cards (Active Bookings Only) */}
+                  {/* Security OTP Display Panel */}
                   {isActive && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-                      <div className="p-3 rounded-xl bg-amber-50/90 border border-amber-200/90 flex items-center justify-between">
-                        <div>
-                          <div className="text-[10px] uppercase font-bold text-amber-800 flex items-center gap-1">
-                            <Key className="w-3 h-3 text-amber-600" />
-                            <span>Start Job OTP</span>
-                          </div>
-                          <div className="text-[11px] text-amber-700">Give on doorstep arrival</div>
-                        </div>
-                        <span className="text-xl font-mono font-extrabold text-amber-950 tracking-wider bg-white/80 px-2.5 py-1 rounded-lg border border-amber-200">
+                    <div className="grid grid-cols-2 gap-2 sm:gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700">
+                      <div className="p-2 sm:p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 text-center">
+                        <span className="text-[10px] font-bold uppercase text-amber-800 dark:text-amber-300 flex items-center justify-center gap-1">
+                          <Key className="w-3 h-3" />
+                          <span>Start OTP</span>
+                        </span>
+                        <div className="text-lg sm:text-xl font-mono font-black text-amber-950 dark:text-amber-200 tracking-widest mt-0.5">
                           {b.start_otp || '----'}
+                        </div>
+                        <span className="text-[9px] text-amber-700 dark:text-amber-400 block mt-0.5">
+                          Give upon arrival
                         </span>
                       </div>
 
-                      <div className="p-3 rounded-xl bg-emerald-50/90 border border-emerald-200/90 flex items-center justify-between">
-                        <div>
-                          <div className="text-[10px] uppercase font-bold text-emerald-800 flex items-center gap-1">
-                            <ShieldCheck className="w-3 h-3 text-emerald-600" />
-                            <span>Completion OTP</span>
-                          </div>
-                          <div className="text-[11px] text-emerald-700">Give ONLY when work is finished</div>
-                        </div>
-                        <span className="text-xl font-mono font-extrabold text-emerald-950 tracking-wider bg-white/80 px-2.5 py-1 rounded-lg border border-emerald-200">
+                      <div className="p-2 sm:p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 text-center">
+                        <span className="text-[10px] font-bold uppercase text-emerald-800 dark:text-emerald-300 flex items-center justify-center gap-1">
+                          <ShieldCheck className="w-3 h-3" />
+                          <span>Completion OTP</span>
+                        </span>
+                        <div className="text-lg sm:text-xl font-mono font-black text-emerald-950 dark:text-emerald-200 tracking-widest mt-0.5">
                           {b.completion_otp || '----'}
+                        </div>
+                        <span className="text-[9px] text-emerald-700 dark:text-emerald-400 block mt-0.5">
+                          Give when job is done
                         </span>
                       </div>
                     </div>
                   )}
 
-                  {/* Pending Extra Quotes Action Required */}
+                  {/* Pending Extra Quotes Workflow */}
                   {pendingQuotes.length > 0 && (
-                    <div className="p-3.5 rounded-2xl bg-indigo-50/90 border border-indigo-200 space-y-2">
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-900">
-                        <AlertCircle className="w-4 h-4 text-indigo-600 flex-shrink-0" />
-                        <span>Action Required: Specialist Submitted Extra Parts/Labor Quote</span>
+                    <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 space-y-2.5">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-amber-900 dark:text-amber-200">
+                        <AlertCircle className="w-4 h-4 text-amber-600" />
+                        <span>Extra Quote Requested by Specialist:</span>
                       </div>
-                      {pendingQuotes.map(q => (
-                        <div key={q.id} className="p-3 rounded-xl bg-white border border-indigo-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                          <div>
-                            <div className="text-xs font-bold text-slate-900">{q.title}</div>
-                            {q.description && <div className="text-[11px] text-slate-500">{q.description}</div>}
-                            <div className="text-xs font-extrabold text-indigo-600 mt-0.5">Amount: ₹{q.amount}</div>
+                      {pendingQuotes.map((q) => (
+                        <div key={q.id} className="p-3 bg-white dark:bg-slate-900 rounded-lg border border-amber-200/80 dark:border-amber-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                          <div className="text-xs">
+                            <p className="font-bold text-slate-900 dark:text-white">Amount: ₹{q.amount}</p>
+                            <p className="text-slate-600 dark:text-slate-400 text-[11px]">{q.description}</p>
                           </div>
                           <div className="flex items-center gap-2">
                             <button
-                              disabled={resolvingQuoteId === q.id}
-                              onClick={() => handleResolveQuote(q.id, 'REJECT')}
-                              className="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold transition-colors disabled:opacity-50"
-                            >
-                              Decline
-                            </button>
-                            <button
-                              disabled={resolvingQuoteId === q.id}
                               onClick={() => handleResolveQuote(q.id, 'APPROVE')}
-                              className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm transition-all disabled:opacity-50 flex items-center gap-1"
+                              disabled={resolvingQuoteId === q.id}
+                              className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1 shadow-sm active:scale-95"
                             >
                               <Check className="w-3.5 h-3.5" />
-                              <span>Approve (₹{q.amount})</span>
+                              <span>Approve</span>
+                            </button>
+                            <button
+                              onClick={() => handleResolveQuote(q.id, 'REJECT')}
+                              disabled={resolvingQuoteId === q.id}
+                              className="px-3 py-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 font-bold text-xs flex items-center gap-1 active:scale-95"
+                            >
+                              <Ban className="w-3.5 h-3.5" />
+                              <span>Decline</span>
                             </button>
                           </div>
                         </div>
@@ -265,13 +259,13 @@ export const MyBookingsModal = ({ isOpen, onClose }) => {
                     </div>
                   )}
 
-                  {/* Cancellation */}
+                  {/* Actions Bar */}
                   {canCancel && (
                     <div className="flex justify-end pt-1">
                       <button
-                        disabled={cancellingId === b.id}
                         onClick={() => handleCancel(b.id)}
-                        className="px-3 py-1 rounded-lg border border-rose-200 text-rose-700 hover:bg-rose-50 text-xs font-semibold transition-colors disabled:opacity-50"
+                        disabled={cancellingId === b.id}
+                        className="px-3 py-1.5 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-xs font-bold transition-all disabled:opacity-50 active:scale-95"
                       >
                         {cancellingId === b.id ? 'Cancelling...' : 'Cancel Appointment & Refund Escrow'}
                       </button>

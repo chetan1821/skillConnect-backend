@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
@@ -94,7 +95,7 @@ const MainLayout = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 font-sans text-slate-900 selection:bg-indigo-600 selection:text-white">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 selection:bg-indigo-600 selection:text-white transition-colors duration-200">
       {/* Global System Announcement Banner */}
       <AnnouncementBanner />
 
@@ -193,8 +194,10 @@ const MainLayout = () => {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <MainLayout />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <MainLayout />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
