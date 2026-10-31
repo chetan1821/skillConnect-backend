@@ -25,7 +25,7 @@ export const AuthModal = ({ isOpen, onClose, initialTab = 'login' }) => {
     setErrorMsg('');
     setIsLoading(true);
     try {
-      await login(email, password);
+      await login(email.trim(), password);
       onClose();
     } catch (err) {
       setErrorMsg(err.message || 'Login failed. Please verify your credentials.');
@@ -41,7 +41,7 @@ export const AuthModal = ({ isOpen, onClose, initialTab = 'login' }) => {
     try {
       await register({
         full_name: fullName,
-        email,
+        email: email.trim(),
         phone_number: phoneNumber,
         password
       });
@@ -163,12 +163,46 @@ export const AuthModal = ({ isOpen, onClose, initialTab = 'login' }) => {
                 <ArrowRight className="w-4 h-4" />
               </button>
 
-              <div className="pt-2 text-center text-xs text-slate-500 dark:text-slate-400">
-                <span>Demo Accounts: </span>
-                <span className="font-semibold text-slate-700 dark:text-slate-300">admin@skillconnect.com</span>
-                <span> (Admin) or </span>
-                <span className="font-semibold text-slate-700 dark:text-slate-300">rajesh.electricals@skillconnect.com</span>
-                <span> (Provider)</span>
+              {/* 1-Click Quick Demo Sign In */}
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1.5">
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block text-center">
+                  Quick Fill Demo Sign In:
+                </span>
+                <div className="grid grid-cols-3 gap-1.5 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEmail('admin@skillconnect.com');
+                      setPassword('Admin@123');
+                      setErrorMsg('');
+                    }}
+                    className="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 font-bold border border-amber-200 dark:border-amber-900 text-center hover:bg-amber-100 dark:hover:bg-amber-900/60 transition-colors"
+                  >
+                    Admin
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEmail('rajesh.electricals@skillconnect.com');
+                      setPassword('Provider@123');
+                      setErrorMsg('');
+                    }}
+                    className="p-1.5 rounded-lg bg-sky-50 dark:bg-sky-950/40 text-sky-800 dark:text-sky-300 font-bold border border-sky-200 dark:border-sky-900 text-center hover:bg-sky-100 dark:hover:bg-sky-900/60 transition-colors"
+                  >
+                    Specialist
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEmail('chetanpatil@gmail.com');
+                      setPassword('Admin@123');
+                      setErrorMsg('');
+                    }}
+                    className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 font-bold border border-emerald-200 dark:border-emerald-900 text-center hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-colors"
+                  >
+                    Chetan
+                  </button>
+                </div>
               </div>
             </form>
           ) : (

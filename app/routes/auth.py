@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends , HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from app.database.database import get_db
 from app.schemas.user import UserCreate, UserResponse
 from app.services.user_service import create_user
@@ -29,8 +30,9 @@ def login(
     login_data: LoginRequest,
     db: Session = Depends(get_db)
 ):
+    email_clean = login_data.email.strip().lower()
     user = db.query(User).filter(
-        User.email == login_data.email
+        func.lower(User.email) == email_clean
     ).first()
 
     if not user:
