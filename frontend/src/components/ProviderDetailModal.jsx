@@ -187,6 +187,81 @@ export const ProviderDetailModal = ({ provider, onClose, onBookingSuccess }) => 
             </div>
           </div>
 
+          {/* Feature 1: Verified Client Reviews Section */}
+          <div className="border-t border-slate-100 dark:border-slate-800 pt-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                <span>Client Reviews & Ratings ({reviews.length})</span>
+              </h4>
+              {reviews.length > 0 && (
+                <span className="text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 px-2.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">
+                  ★ {(reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)} / 5.0
+                </span>
+              )}
+            </div>
+
+            {loadingReviews ? (
+              <div className="p-4 text-center text-xs text-slate-400">Loading verified reviews...</div>
+            ) : reviews.length > 0 ? (
+              <div className="space-y-2.5 max-h-52 overflow-y-auto pr-1">
+                {reviews.map((r) => (
+                  <div
+                    key={r.id}
+                    className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-xs space-y-1.5"
+                  >
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center text-amber-400">
+                          {[1, 2, 3, 4, 5].map((s) => (
+                            <Star
+                              key={s}
+                              className={`w-3 h-3 ${s <= r.rating ? 'fill-current' : 'text-slate-300 dark:text-slate-600'}`}
+                            />
+                          ))}
+                        </div>
+                        <span className="font-bold text-slate-900 dark:text-white">
+                          {r.customer_name || 'Customer'}
+                        </span>
+                        {r.title && (
+                          <span className="text-slate-600 dark:text-slate-400 font-medium">
+                            • {r.title}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-slate-400">
+                        {r.created_at ? new Date(r.created_at).toLocaleDateString() : 'Verified'}
+                      </span>
+                    </div>
+
+                    {r.comment && (
+                      <p className="text-slate-600 dark:text-slate-300 italic">
+                        "{r.comment}"
+                      </p>
+                    )}
+
+                    {r.tags && (
+                      <div className="flex flex-wrap gap-1 pt-0.5">
+                        {r.tags.split(',').map((t, i) => (
+                          <span
+                            key={i}
+                            className="text-[9px] font-semibold px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900/60"
+                          >
+                            {t.trim()}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 text-center text-xs text-slate-400">
+                No client reviews yet. Be the first to book and leave a review for this specialist!
+              </div>
+            )}
+          </div>
+
           {/* Booking Section */}
           <div className="border-t border-slate-100 dark:border-slate-800 pt-5">
             <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">

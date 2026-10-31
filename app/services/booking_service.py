@@ -67,7 +67,7 @@ def create_notification(
     return notif
 
 
-def _format_booking(booking: Booking, db: Session) -> dict:
+def _format_booking(booking: Booking, db: Session, for_provider: bool = False) -> dict:
     customer = db.query(User).filter(User.id == booking.customer_id).first()
     provider = db.query(Provider).filter(Provider.id == booking.provider_id).first()
     provider_user = db.query(User).filter(User.id == provider.user_id).first() if provider else None
@@ -133,8 +133,8 @@ def _format_booking(booking: Booking, db: Session) -> dict:
         "payment_status": booking.payment_status,
 
         # Security & OTPs
-        "start_otp": booking.start_otp,
-        "completion_otp": booking.completion_otp,
+        "start_otp": None if for_provider else booking.start_otp,
+        "completion_otp": None if for_provider else booking.completion_otp,
         "cancellation_reason": booking.cancellation_reason,
 
         # Dispute Fields
@@ -258,7 +258,7 @@ def get_customer_bookings(db: Session, customer_id: int) -> list[dict]:
         .order_by(Booking.created_at.desc())
         .all()
     )
-    return [_format_booking(b, db) for b in bookings]
+    return [_format_booking(b, db, for_provider=False) for b in bookings]
 
 
 def get_provider_bookings(db: Session, user_id: int) -> list[dict]:
@@ -272,7 +272,7 @@ def get_provider_bookings(db: Session, user_id: int) -> list[dict]:
         .order_by(Booking.created_at.desc())
         .all()
     )
-    return [_format_booking(b, db) for b in bookings]
+    return [_format_booking(b, db, for_provider=True) for b in bookings]
 
 
 def update_booking_status(db: Session, booking_id: int, current_user: User, new_status: str, cancellation_reason: str = None) -> dict:
@@ -334,7 +334,7 @@ def update_booking_status(db: Session, booking_id: int, current_user: User, new_
             link_id=booking.id
         )
 
-    return _format_booking(booking, db)
+    return _format_booking(booking, db, for_provider=is_provider)
 
 
 def provider_start_job(db: Session, user_id: int, booking_id: int, start_otp: str) -> dict:
@@ -362,7 +362,7 @@ def provider_start_job(db: Session, user_id: int, booking_id: int, start_otp: st
         link_id=booking.id
     )
 
-    return _format_booking(booking, db)
+    return _format_booking(booking, db, for_provider=True)
 
 
 def provider_complete_job(db: Session, user_id: int, booking_id: int, completion_otp: str) -> dict:
@@ -425,7 +425,7 @@ def provider_complete_job(db: Session, user_id: int, booking_id: int, completion
 
     return {
         "message": f"Job #{booking.id} completed successfully! Rs. {payout_amt} released to provider wallet.",
-        "booking": _format_booking(booking, db)
+        "booking": _format_booking(booking, db, for_provider=True)
     }
 
 
@@ -565,30 +565,34 @@ def create_booking_review(db: Session, customer_id: int, booking_id: int, data: 
     if existing_review:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="This booking has already been reviewed")
 
+    cleaned_comment = data.comment.strip() if data.comment and data.comment.strip() else ""
+    cleaned_title = data.title.strip() if data.title and data.title.strip() else None
+    cleaned_tags = data.tags.strip() if data.tags and data.tags.strip() else None
+
     review = Review(
         booking_id=booking.id,
         customer_id=customer_id,
         provider_id=booking.provider_id,
         rating=data.rating,
-        title=data.title,
-        comment=data.comment,
-        tags=data.tags
+        title=cleaned_title,
+        comment=cleaned_comment,
+        tags=cleaned_tags
     )
     db.add(review)
     db.commit()
     db.refresh(review)
 
-    # Recalculate Provider Average Rating
+    # Recalculate Provider Average Rating & Dispatch Notification
     provider = db.query(Provider).filter(Provider.id == booking.provider_id).first()
     if provider:
         all_reviews = db.query(Review).filter(Review.provider_id == provider.id).all()
-        avg_rating = sum(r.rating for r in all_reviews) / len(all_reviews) if all_reviews else 5.0
-        # If provider model has rating/reviews_count attributes
+        avg_rating = round(sum(r.rating for r in all_reviews) / len(all_reviews), 1) if all_reviews else 5.0
+        comment_snippet = f": '{cleaned_comment[:40]}...'" if cleaned_comment else ""
         create_notification(
             db,
             user_id=provider.user_id,
             title=f"New {data.rating}-Star Review Received!",
-            message=f"A customer left a {data.rating}★ review for Booking #{booking.id}: '{data.comment[:50]}...'",
+            message=f"A customer left a {data.rating}★ rating ({avg_rating} overall) for Booking #{booking.id}{comment_snippet}.",
             link_type="BOOKING",
             link_id=booking.id
         )
@@ -604,6 +608,7 @@ def create_booking_review(db: Session, customer_id: int, booking_id: int, data: 
         "comment": review.comment,
         "tags": review.tags,
         "customer_name": customer.full_name if customer else "Customer",
+        "provider_business_name": provider.business_name if provider else "Provider",
         "created_at": review.created_at
     }
 

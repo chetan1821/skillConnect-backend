@@ -35,7 +35,7 @@ class ExtraQuoteAction(BaseModel):
 class ReviewCreate(BaseModel):
     rating: int = Field(..., ge=1, le=5)
     title: str | None = Field(default=None, max_length=150)
-    comment: str = Field(..., min_length=5, max_length=1000)
+    comment: str | None = Field(default=None, max_length=1000)
     tags: str | None = Field(default=None, max_length=255)
 
 
@@ -46,7 +46,7 @@ class ReviewResponse(BaseModel):
     provider_id: int
     rating: int
     title: str | None = None
-    comment: str
+    comment: str | None = None
     tags: str | None = None
     customer_name: str | None = None
     provider_business_name: str | None = None

@@ -50,12 +50,13 @@ export default function ReviewModal({ booking, onClose, onSuccess }) {
 
     try {
       await api.submitBookingReview(booking.id, {
-        rating,
+        rating: Number(rating),
         title: title.trim() || undefined,
         comment: comment.trim() || undefined,
-        tags: selectedTags.join(', ')
+        tags: selectedTags.length > 0 ? selectedTags.join(', ') : undefined
       });
       if (onSuccess) onSuccess();
+      window.dispatchEvent(new CustomEvent('notification-updated'));
       onClose();
     } catch (err) {
       setError(err.message || 'Failed to submit review');

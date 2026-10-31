@@ -398,7 +398,7 @@ export const ProviderPortal = ({ onSwitchToCustomer }) => {
                     </div>
 
                     {/* Feature 4: Stepper Timeline */}
-                    <BookingTimeline booking={req} />
+                    <BookingTimeline booking={req} isProvider={true} />
 
                     {/* Extra Quotes attached */}
                     {req.extra_quotes && req.extra_quotes.length > 0 && (

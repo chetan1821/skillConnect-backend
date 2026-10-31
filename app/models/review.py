@@ -21,7 +21,7 @@ class Review(Base):
 
     rating = Column(Integer, nullable=False)  # 1 to 5
     title = Column(String(150), nullable=True)
-    comment = Column(Text, nullable=False)
+    comment = Column(Text, nullable=True, default="")
     tags = Column(String(255), nullable=True)  # e.g., "Punctual,Clean Work,Polite"
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())

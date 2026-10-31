@@ -20,7 +20,7 @@ const STATUS_ORDER = {
   DECLINED: -1,
 };
 
-export default function BookingTimeline({ booking }) {
+export default function BookingTimeline({ booking, isProvider = false }) {
   if (!booking) return null;
 
   const rawStatus = (booking.status || 'PENDING').toUpperCase();
@@ -112,8 +112,8 @@ export default function BookingTimeline({ booking }) {
         </div>
       </div>
 
-      {/* OTP Display helper for customer */}
-      {(booking.start_otp || booking.completion_otp) && currentStatus !== 'COMPLETED' && (
+      {/* OTP Display helper for customer only (hidden from provider) */}
+      {!isProvider && (booking.start_otp || booking.completion_otp) && currentStatus !== 'COMPLETED' && (
         <div className="mt-3 pt-2.5 border-t border-slate-200/70 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs">
           {booking.start_otp && (currentStatus === 'PENDING' || currentStatus === 'ACCEPTED') && (
             <div className="flex items-center gap-1.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 px-2.5 py-1 rounded-lg text-amber-900 dark:text-amber-300">
