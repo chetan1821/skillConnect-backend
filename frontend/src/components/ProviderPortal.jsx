@@ -110,13 +110,27 @@ export const ProviderPortal = ({ onSwitchToCustomer }) => {
     }
   };
 
+  const handleMarkInProgress = async (bookingId) => {
+    setIsUpdating(true);
+    try {
+      await api.updateBookingStatus(bookingId, 'In Progress');
+      showToast(`Job #${bookingId} is now In Progress!`, 'success');
+      loadPortalData();
+      window.dispatchEvent(new CustomEvent('notification-updated'));
+    } catch (err) {
+      showToast(err.message || 'Failed to update job status', 'error');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const handleVerifyStartOtp = async (e) => {
     e.preventDefault();
     if (!startOtpInput.trim()) return;
     setIsUpdating(true);
     try {
       await api.startBookingJob(startOtpModalBooking.id, startOtpInput.trim());
-      showToast('Start OTP verified! Status set to In Progress.', 'success');
+      showToast('Start OTP verified! Job status is now Started.', 'success');
       setStartOtpModalBooking(null);
       setStartOtpInput('');
       loadPortalData();
@@ -345,6 +359,8 @@ export const ProviderPortal = ({ onSwitchToCustomer }) => {
                             ? 'bg-amber-100 text-amber-800'
                             : req.status === 'Accepted'
                             ? 'bg-sky-100 text-sky-800'
+                            : req.status === 'Started'
+                            ? 'bg-blue-100 text-blue-800'
                             : req.status === 'In Progress'
                             ? 'bg-indigo-100 text-indigo-800'
                             : req.status === 'Completed'
@@ -436,6 +452,43 @@ export const ProviderPortal = ({ onSwitchToCustomer }) => {
                         <Key className="w-3.5 h-3.5" />
                         <span>Start Work (Enter OTP)</span>
                       </button>
+                    )}
+
+                    {req.status === 'Started' && (
+                      <>
+                        <button
+                          disabled={isUpdating}
+                          onClick={() => handleMarkInProgress(req.id)}
+                          className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all shadow-sm active:scale-95 flex items-center gap-1.5 disabled:opacity-50"
+                        >
+                          <Play className="w-3.5 h-3.5 fill-current" />
+                          <span>Mark In Progress</span>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setExtraQuoteBooking(req);
+                            setQuoteTitle('');
+                            setQuoteDescription('');
+                            setQuoteAmount('');
+                          }}
+                          className="px-3 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold transition-all flex items-center gap-1"
+                        >
+                          <PlusCircle className="w-3.5 h-3.5" />
+                          <span>+ Extra Quote</span>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setCompleteOtpModalBooking(req);
+                            setCompleteOtpInput('');
+                          }}
+                          className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-sm active:scale-95 flex items-center gap-1.5"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>Complete (Enter OTP)</span>
+                        </button>
+                      </>
                     )}
 
                     {req.status === 'In Progress' && (

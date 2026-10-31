@@ -11,6 +11,7 @@ class BookingStatus(str, Enum):
     PENDING = "Pending"
     ACCEPTED = "Accepted"
     DECLINED = "Declined"
+    STARTED = "Started"
     IN_PROGRESS = "In Progress"
     COMPLETED = "Completed"
     CANCELLED = "Cancelled"

@@ -349,15 +349,15 @@ def provider_start_job(db: Session, user_id: int, booking_id: int, start_otp: st
     if booking.start_otp and booking.start_otp.strip() != start_otp.strip():
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid Start OTP provided by customer")
 
-    booking.status = BookingStatus.IN_PROGRESS.value
+    booking.status = BookingStatus.STARTED.value
     db.commit()
     db.refresh(booking)
 
     create_notification(
         db,
         user_id=booking.customer_id,
-        title="Specialist Arrived & Started Work",
-        message=f"{provider.business_name} has verified your Start OTP and is actively working on Job #{booking.id}.",
+        title="Specialist Arrived (Start OTP Verified)",
+        message=f"{provider.business_name} has arrived and verified your Start OTP. Job #{booking.id} is now Started.",
         link_type="BOOKING",
         link_id=booking.id
     )
@@ -450,6 +450,8 @@ def provider_submit_extra_quote(db: Session, user_id: int, booking_id: int, data
         status="PENDING"
     )
     db.add(quote)
+    if booking.status == BookingStatus.STARTED.value:
+        booking.status = BookingStatus.IN_PROGRESS.value
     db.commit()
     db.refresh(quote)
 
@@ -524,6 +526,9 @@ def customer_resolve_extra_quote(db: Session, customer_id: int, quote_id: int, a
     booking.provider_payout = Decimal(str(new_pricing["provider_payout"]))
     booking.platform_commission = Decimal(str(new_pricing["platform_commission"]))
     booking.total_amount = new_pricing["formatted_total"]
+
+    if booking.status == BookingStatus.STARTED.value:
+        booking.status = BookingStatus.IN_PROGRESS.value
 
     # Update Provider Wallet Pending Escrow
     wallet = _get_or_create_wallet(db, booking.provider_id)

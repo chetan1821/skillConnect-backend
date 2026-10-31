@@ -99,7 +99,7 @@ export const BookingManagement = () => {
   // Status metrics
   const totalCount = bookings.length;
   const pendingCount = bookings.filter(b => b.status === 'Pending').length;
-  const activeCount = bookings.filter(b => b.status === 'Accepted' || b.status === 'In Progress').length;
+  const activeCount = bookings.filter(b => b.status === 'Accepted' || b.status === 'Started' || b.status === 'In Progress').length;
   const completedCount = bookings.filter(b => b.status === 'Completed').length;
   const cancelledCount = bookings.filter(b => b.status === 'Cancelled' || b.status === 'Declined').length;
 
@@ -265,6 +265,8 @@ export const BookingManagement = () => {
                           ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
                           : b.status === 'Accepted'
                           ? 'bg-sky-500/15 text-sky-300 border border-sky-500/30'
+                          : b.status === 'Started'
+                          ? 'bg-blue-500/15 text-blue-300 border border-blue-500/30'
                           : b.status === 'In Progress'
                           ? 'bg-indigo-500/15 text-indigo-300 border border-indigo-500/30'
                           : 'bg-rose-500/15 text-rose-300 border border-rose-500/30'

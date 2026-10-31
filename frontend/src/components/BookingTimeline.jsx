@@ -4,7 +4,8 @@ import { Check, Clock, Play, Wrench, ShieldCheck, AlertTriangle, Key } from 'luc
 const STEPS = [
   { key: 'PENDING', label: 'Booked', desc: 'Awaiting confirmation' },
   { key: 'ACCEPTED', label: 'Accepted', desc: 'Specialist assigned' },
-  { key: 'IN_PROGRESS', label: 'In Progress', desc: 'Doorstep OTP verified' },
+  { key: 'STARTED', label: 'Started', desc: 'Doorstep OTP verified' },
+  { key: 'IN_PROGRESS', label: 'In Progress', desc: 'Work underway' },
   { key: 'COMPLETED', label: 'Completed', desc: 'Escrow released' },
 ];
 
@@ -12,9 +13,9 @@ const STATUS_ORDER = {
   PENDING: 1,
   ACCEPTED: 2,
   STARTED: 3,
-  IN_PROGRESS: 3,
-  'IN PROGRESS': 3,
-  COMPLETED: 4,
+  IN_PROGRESS: 4,
+  'IN PROGRESS': 4,
+  COMPLETED: 5,
   CANCELLED: -1,
   DECLINED: -1,
 };
@@ -60,16 +61,17 @@ export default function BookingTimeline({ booking }) {
       )}
 
       {/* Stepper Bar */}
-      <div className="relative">
-        {/* Progress background line */}
-        <div className="absolute top-3.5 left-4 right-4 h-0.5 bg-slate-200 dark:bg-slate-800 -z-0" />
-        {/* Active progress line */}
-        <div
-          className="absolute top-3.5 left-4 h-0.5 bg-indigo-600 dark:bg-indigo-500 transition-all duration-500 -z-0"
-          style={{
-            width: `${Math.min(100, Math.max(0, ((currentStep - 1) / (STEPS.length - 1)) * 100))}%`
-          }}
-        />
+      <div className="relative pt-1 pb-1">
+        {/* Track Container aligned exactly from center of step 1 (10%) to center of step 5 (90%) */}
+        <div className="absolute top-[17px] left-[10%] right-[10%] h-1 -z-0">
+          <div className="w-full h-full bg-slate-200 dark:bg-slate-800 rounded-full" />
+          <div
+            className="absolute top-0 left-0 h-full bg-indigo-600 dark:bg-indigo-500 rounded-full transition-all duration-700 ease-in-out"
+            style={{
+              width: `${Math.min(100, Math.max(0, ((currentStep - 1) / (STEPS.length - 1)) * 100))}%`
+            }}
+          />
+        </div>
 
         <div className="relative z-10 flex items-start justify-between">
           {STEPS.map((step, idx) => {
@@ -93,7 +95,7 @@ export default function BookingTimeline({ booking }) {
                 <span
                   className={`mt-1.5 text-[11px] font-semibold leading-tight ${
                     isActive
-                      ? 'text-indigo-600 dark:text-indigo-400'
+                      ? 'text-indigo-600 dark:text-indigo-400 font-bold'
                       : isCompleted
                       ? 'text-emerald-700 dark:text-emerald-400'
                       : 'text-slate-400 dark:text-slate-500'
@@ -113,7 +115,7 @@ export default function BookingTimeline({ booking }) {
       {/* OTP Display helper for customer */}
       {(booking.start_otp || booking.completion_otp) && currentStatus !== 'COMPLETED' && (
         <div className="mt-3 pt-2.5 border-t border-slate-200/70 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs">
-          {booking.start_otp && currentStatus === 'ACCEPTED' && (
+          {booking.start_otp && (currentStatus === 'PENDING' || currentStatus === 'ACCEPTED') && (
             <div className="flex items-center gap-1.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 px-2.5 py-1 rounded-lg text-amber-900 dark:text-amber-300">
               <Key className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
               <span>Share <strong>Start OTP</strong> upon arrival: <strong className="font-mono text-sm tracking-wider text-amber-700 dark:text-amber-200">{booking.start_otp}</strong></span>

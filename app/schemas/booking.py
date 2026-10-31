@@ -162,7 +162,7 @@ class BookingCreate(BaseModel):
 
 
 class BookingStatusUpdate(BaseModel):
-    status: str = Field(..., description="Pending, Accepted, Declined, In Progress, Completed, Cancelled")
+    status: str = Field(..., description="Pending, Accepted, Declined, Started, In Progress, Completed, Cancelled")
     cancellation_reason: str | None = None
 
 
